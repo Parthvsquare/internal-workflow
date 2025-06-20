@@ -20,9 +20,8 @@ describe('App', () => {
       </BrowserRouter>
     );
     expect(
-      getAllByText(
-        new RegExp('Welcome @internal-workflow/internal-workflow', 'gi')
-      ).length > 0
+      getAllByText(new RegExp('Welcome @internal-workflow/web', 'gi')).length >
+        0
     ).toBeTruthy();
   });
 });
