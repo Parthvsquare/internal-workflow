@@ -26,7 +26,8 @@
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"
         }
-      }
+      },
+      "exclude": ["library/storage/*"]
     },
     {
       "plugin": "@nx/react/router-plugin",
@@ -73,6 +74,15 @@
         "previewTargetName": "preview",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "include": ["library/storage/*"],
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
       }
     }
   ],
