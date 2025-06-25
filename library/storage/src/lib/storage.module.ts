@@ -20,6 +20,6 @@ export const ENTITY = [
   imports: [TypeOrmModule.forFeature(ENTITY)],
   controllers: [],
   providers: [],
-  exports: [],
+  exports: [TypeOrmModule],
 })
 export class InternalWorkflowStorageModule {}

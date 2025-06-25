@@ -24,7 +24,7 @@ export class WorkflowStepEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'string' })
+  @Column({ type: 'text' })
   versionId!: string;
 
   @Column({ type: 'text' })

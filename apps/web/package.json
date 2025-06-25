@@ -1,5 +1,8 @@
 {
   "name": "@internal-workflow/web",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@ariakit/react": "^0.4.17"
+  }
 }

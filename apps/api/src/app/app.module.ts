@@ -1,14 +1,16 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import {
   ENTITY,
   InternalWorkflowStorageModule,
 } from '@internal-workflow/storage';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from '../config/database.config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
-const MODULES = [InternalWorkflowStorageModule];
+import { WorkflowRegistryModule } from '../workflow-registry/workflow-registry.module';
+
+const MODULES = [InternalWorkflowStorageModule, WorkflowRegistryModule];
 
 @Module({
   imports: [

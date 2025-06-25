@@ -21,7 +21,7 @@ import {
 // );
 
 @Entity('credential_type')
-@Index('idx_credential_type_key', ['key'])
+@Index('idx_credential_type_key', ['id'])
 export class WorkflowCredentialTypeEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -47,7 +47,7 @@ export class WorkflowCredentialTypeEntity {
   @Column({ type: 'text', nullable: true })
   auth_type?: string;
 
-  @Column({ type: 'array', nullable: true })
+  @Column({ type: 'simple-array', nullable: true })
   supported_actions?: string[];
 
   @CreateDateColumn()
