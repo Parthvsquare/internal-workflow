@@ -26,28 +26,37 @@ export class WorkflowActionRegistryEntity {
   category?: string;
 
   @Column({ type: 'text', nullable: true })
-  event_source?: string;
+  group?: string;
+
+  @Column({ type: 'text', nullable: true })
+  icon?: string;
+
+  @Column({ type: 'text', nullable: true })
+  icon_color?: string;
+
+  @Column({ type: 'text', nullable: true })
+  documentation_url?: string;
 
   @Column({ type: 'int', default: 1 })
   version!: number;
 
+  @Column({ type: 'boolean', default: true })
+  is_active!: boolean;
+
   @Column({ type: 'jsonb', default: {} })
   properties_schema?: Record<string, any>;
+
+  @Column({ type: 'jsonb', default: {} })
+  credentials_schema?: Record<string, any>;
+
+  @Column({ type: 'jsonb', default: {} })
+  operation_schema?: Record<string, any>;
 
   @Column({ type: 'jsonb', default: {} })
   filter_schema?: Record<string, any>;
 
   @Column({ type: 'jsonb', default: {} })
   sample_payload?: Record<string, any>;
-
-  @Column({ type: 'jsonb', default: {} })
-  webhook_config?: Record<string, any>;
-
-  @Column({ type: 'jsonb', default: {} })
-  available_variables?: Record<string, any>;
-
-  @Column({ type: 'boolean', default: true })
-  is_active!: boolean;
 
   @CreateDateColumn()
   created_at!: Date;
