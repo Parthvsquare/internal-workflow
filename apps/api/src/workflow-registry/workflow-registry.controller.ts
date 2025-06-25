@@ -10,18 +10,36 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiNoContentResponse,
+} from '@nestjs/swagger';
 import { WorkflowRegistryService } from './workflow-registry.service';
 import {
   CreateActionRegistryDto,
   UpdateActionRegistryDto,
   ActionRegistryResponseDto,
+  ActionCategory,
 } from './dto/action-registry.dto';
 import {
   CreateTriggerRegistryDto,
   UpdateTriggerRegistryDto,
   TriggerRegistryResponseDto,
+  TriggerCategory,
+  EventSource,
 } from './dto/trigger-registry.dto';
 
+@ApiTags('workflow-registry')
 @Controller('workflow-registry')
 export class WorkflowRegistryController {
   constructor(
@@ -31,6 +49,20 @@ export class WorkflowRegistryController {
   // Action Registry Endpoints
   @Post('actions')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new action',
+    description:
+      'Creates a new workflow action in the registry with specified properties and schema',
+  })
+  @ApiBody({ type: CreateActionRegistryDto })
+  @ApiCreatedResponse({
+    description: 'Action created successfully',
+    type: ActionRegistryResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiConflictResponse({
+    description: 'Action with the same key already exists',
+  })
   async createAction(
     @Body() createDto: CreateActionRegistryDto
   ): Promise<ActionRegistryResponseDto> {
@@ -38,6 +70,21 @@ export class WorkflowRegistryController {
   }
 
   @Get('actions')
+  @ApiOperation({
+    summary: 'Get all actions',
+    description:
+      'Retrieves all workflow actions from the registry with optional filtering',
+  })
+  @ApiQuery({
+    name: 'active',
+    required: false,
+    description: 'Filter by active status (true/false)',
+    example: 'true',
+  })
+  @ApiOkResponse({
+    description: 'List of actions retrieved successfully',
+    type: [ActionRegistryResponseDto],
+  })
   async getAllActions(
     @Query('active') active?: string
   ): Promise<ActionRegistryResponseDto[]> {
@@ -48,6 +95,20 @@ export class WorkflowRegistryController {
   }
 
   @Get('actions/category/:category')
+  @ApiOperation({
+    summary: 'Get actions by category',
+    description: 'Retrieves all active workflow actions filtered by category',
+  })
+  @ApiParam({
+    name: 'category',
+    description: 'Action category to filter by',
+    enum: ActionCategory,
+    example: ActionCategory.COMMUNICATION,
+  })
+  @ApiOkResponse({
+    description: 'List of actions in the specified category',
+    type: [ActionRegistryResponseDto],
+  })
   async getActionsByCategory(
     @Param('category') category: string
   ): Promise<ActionRegistryResponseDto[]> {
@@ -55,6 +116,20 @@ export class WorkflowRegistryController {
   }
 
   @Get('actions/:key')
+  @ApiOperation({
+    summary: 'Get action by key',
+    description: 'Retrieves a specific workflow action by its unique key',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique action key',
+    example: 'send_email',
+  })
+  @ApiOkResponse({
+    description: 'Action retrieved successfully',
+    type: ActionRegistryResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Action not found' })
   async getActionByKey(
     @Param('key') key: string
   ): Promise<ActionRegistryResponseDto> {
@@ -62,6 +137,22 @@ export class WorkflowRegistryController {
   }
 
   @Put('actions/:key')
+  @ApiOperation({
+    summary: 'Update action',
+    description: 'Updates an existing workflow action with new properties',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique action key',
+    example: 'send_email',
+  })
+  @ApiBody({ type: UpdateActionRegistryDto })
+  @ApiOkResponse({
+    description: 'Action updated successfully',
+    type: ActionRegistryResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiNotFoundResponse({ description: 'Action not found' })
   async updateAction(
     @Param('key') key: string,
     @Body() updateDto: UpdateActionRegistryDto
@@ -71,6 +162,17 @@ export class WorkflowRegistryController {
 
   @Delete('actions/:key')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete action',
+    description: 'Permanently deletes a workflow action from the registry',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique action key',
+    example: 'send_email',
+  })
+  @ApiNoContentResponse({ description: 'Action deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Action not found' })
   async deleteAction(@Param('key') key: string): Promise<void> {
     return this.workflowRegistryService.deleteAction(key);
   }
@@ -78,6 +180,20 @@ export class WorkflowRegistryController {
   // Trigger Registry Endpoints
   @Post('triggers')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a new trigger',
+    description:
+      'Creates a new workflow trigger in the registry with specified properties and configuration',
+  })
+  @ApiBody({ type: CreateTriggerRegistryDto })
+  @ApiCreatedResponse({
+    description: 'Trigger created successfully',
+    type: TriggerRegistryResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiConflictResponse({
+    description: 'Trigger with the same key already exists',
+  })
   async createTrigger(
     @Body() createDto: CreateTriggerRegistryDto
   ): Promise<TriggerRegistryResponseDto> {
@@ -85,6 +201,21 @@ export class WorkflowRegistryController {
   }
 
   @Get('triggers')
+  @ApiOperation({
+    summary: 'Get all triggers',
+    description:
+      'Retrieves all workflow triggers from the registry with optional filtering',
+  })
+  @ApiQuery({
+    name: 'active',
+    required: false,
+    description: 'Filter by active status (true/false)',
+    example: 'true',
+  })
+  @ApiOkResponse({
+    description: 'List of triggers retrieved successfully',
+    type: [TriggerRegistryResponseDto],
+  })
   async getAllTriggers(
     @Query('active') active?: string
   ): Promise<TriggerRegistryResponseDto[]> {
@@ -95,6 +226,20 @@ export class WorkflowRegistryController {
   }
 
   @Get('triggers/category/:category')
+  @ApiOperation({
+    summary: 'Get triggers by category',
+    description: 'Retrieves all active workflow triggers filtered by category',
+  })
+  @ApiParam({
+    name: 'category',
+    description: 'Trigger category to filter by',
+    enum: TriggerCategory,
+    example: TriggerCategory.WEBHOOK,
+  })
+  @ApiOkResponse({
+    description: 'List of triggers in the specified category',
+    type: [TriggerRegistryResponseDto],
+  })
   async getTriggersByCategory(
     @Param('category') category: string
   ): Promise<TriggerRegistryResponseDto[]> {
@@ -102,6 +247,21 @@ export class WorkflowRegistryController {
   }
 
   @Get('triggers/event-source/:eventSource')
+  @ApiOperation({
+    summary: 'Get triggers by event source',
+    description:
+      'Retrieves all active workflow triggers filtered by event source type',
+  })
+  @ApiParam({
+    name: 'eventSource',
+    description: 'Event source type to filter by',
+    enum: EventSource,
+    example: EventSource.WEBHOOK,
+  })
+  @ApiOkResponse({
+    description: 'List of triggers with the specified event source',
+    type: [TriggerRegistryResponseDto],
+  })
   async getTriggersByEventSource(
     @Param('eventSource') eventSource: string
   ): Promise<TriggerRegistryResponseDto[]> {
@@ -109,6 +269,20 @@ export class WorkflowRegistryController {
   }
 
   @Get('triggers/:key')
+  @ApiOperation({
+    summary: 'Get trigger by key',
+    description: 'Retrieves a specific workflow trigger by its unique key',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique trigger key',
+    example: 'webhook_received',
+  })
+  @ApiOkResponse({
+    description: 'Trigger retrieved successfully',
+    type: TriggerRegistryResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Trigger not found' })
   async getTriggerByKey(
     @Param('key') key: string
   ): Promise<TriggerRegistryResponseDto> {
@@ -116,6 +290,23 @@ export class WorkflowRegistryController {
   }
 
   @Put('triggers/:key')
+  @ApiOperation({
+    summary: 'Update trigger',
+    description:
+      'Updates an existing workflow trigger with new properties and configuration',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique trigger key',
+    example: 'webhook_received',
+  })
+  @ApiBody({ type: UpdateTriggerRegistryDto })
+  @ApiOkResponse({
+    description: 'Trigger updated successfully',
+    type: TriggerRegistryResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiNotFoundResponse({ description: 'Trigger not found' })
   async updateTrigger(
     @Param('key') key: string,
     @Body() updateDto: UpdateTriggerRegistryDto
@@ -125,12 +316,49 @@ export class WorkflowRegistryController {
 
   @Delete('triggers/:key')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete trigger',
+    description: 'Permanently deletes a workflow trigger from the registry',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Unique trigger key',
+    example: 'webhook_received',
+  })
+  @ApiNoContentResponse({ description: 'Trigger deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Trigger not found' })
   async deleteTrigger(@Param('key') key: string): Promise<void> {
     return this.workflowRegistryService.deleteTrigger(key);
   }
 
   // Utility Endpoints
   @Get('schema/action-properties')
+  @ApiOperation({
+    summary: 'Get action property schema',
+    description:
+      'Returns the schema definition for action properties to help with UI form generation',
+  })
+  @ApiOkResponse({
+    description: 'Action property schema retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        properties: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              displayName: { type: 'string' },
+              name: { type: 'string' },
+              type: { type: 'string' },
+              required: { type: 'boolean' },
+              options: { type: 'array' },
+            },
+          },
+        },
+      },
+    },
+  })
   async getActionPropertySchema(): Promise<any> {
     // Return sample schema for UI form generation
     return {
@@ -175,6 +403,32 @@ export class WorkflowRegistryController {
   }
 
   @Get('schema/trigger-properties')
+  @ApiOperation({
+    summary: 'Get trigger property schema',
+    description:
+      'Returns the schema definition for trigger properties to help with UI form generation',
+  })
+  @ApiOkResponse({
+    description: 'Trigger property schema retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        properties: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              displayName: { type: 'string' },
+              name: { type: 'string' },
+              type: { type: 'string' },
+              required: { type: 'boolean' },
+              options: { type: 'array' },
+            },
+          },
+        },
+      },
+    },
+  })
   async getTriggerPropertySchema(): Promise<any> {
     // Return sample schema for UI form generation
     return {
