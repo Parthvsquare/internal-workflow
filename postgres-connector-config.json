@@ -24,3 +24,6 @@
     "transforms.unwrap.add.fields": "op,ts_ms,source.ts_ms"
   }
 }
+
+// to add connector to debezium connect
+// curl -X POST -H "Content-Type: application/json" --data @postgres-connector-config.json http://localhost:8083/connectors
