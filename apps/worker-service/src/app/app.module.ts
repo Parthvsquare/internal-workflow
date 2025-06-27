@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { WorkflowKafkaConsumer } from '../services/workflow-kafka.consumer';
+import { QueueModule } from '@internal-workflow/queue-v2';
+import { WorkflowProcessorService } from '../services/workflow.processor.service';
 
 @Module({
-  imports: [],
+  imports: [QueueModule],
   controllers: [AppController],
-  providers: [AppService, WorkflowKafkaConsumer],
+  providers: [AppService, WorkflowProcessorService],
 })
 export class AppModule {}
