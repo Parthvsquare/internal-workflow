@@ -3,8 +3,6 @@ export * from './workflow/trigger-registry.entity';
 export * from './workflow/workflow-subscription.entity';
 export * from './workflow/credential.entity';
 export * from './workflow/step.entity';
-export * from './workflow/action';
-export * from './workflow/trigger';
 export * from './workflow/version';
 export * from './workflow/definition';
 export * from './workflow/edge.entity';

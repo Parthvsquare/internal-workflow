@@ -1,25 +1,25 @@
+import {
+  WorkflowActionRegistryEntity,
+  WorkflowDefinitionEntity,
+  WorkflowEdgeEntity,
+  WorkflowStepEntity,
+  WorkflowSubscriptionEntity,
+  WorkflowTriggerRegistryEntity,
+  WorkflowVersionEntity,
+} from '@internal-workflow/storage';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {
-  WorkflowDefinitionEntity,
-  WorkflowVersionEntity,
-  WorkflowStepEntity,
-  WorkflowTriggerEntity,
-  WorkflowEdgeEntity,
-  WorkflowActionRegistryEntity,
-  WorkflowTriggerRegistryEntity,
-} from '@internal-workflow/storage';
-import { WorkflowGenerationService } from './workflow-generation.service';
 import { WorkflowGenerationController } from './workflow-generation.controller';
+import { WorkflowGenerationService } from './workflow-generation.service';
 
 const ENTITIES = [
   WorkflowDefinitionEntity,
   WorkflowVersionEntity,
   WorkflowStepEntity,
-  WorkflowTriggerEntity,
   WorkflowEdgeEntity,
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
+  WorkflowSubscriptionEntity,
 ];
 
 @Module({

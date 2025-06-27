@@ -1,27 +1,27 @@
 import {
+  WorkflowActionRegistryEntity,
+  WorkflowDefinitionEntity,
+  WorkflowEdgeEntity,
+  WorkflowStepEntity,
+  WorkflowSubscriptionEntity,
+  WorkflowTriggerRegistryEntity,
+  WorkflowVersionEntity,
+} from '@internal-workflow/storage';
+import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import {
-  WorkflowDefinitionEntity,
-  WorkflowVersionEntity,
-  WorkflowStepEntity,
-  WorkflowTriggerEntity,
-  WorkflowEdgeEntity,
-  WorkflowActionRegistryEntity,
-  WorkflowTriggerRegistryEntity,
-} from '@internal-workflow/storage';
+import { DataSource, Repository } from 'typeorm';
 import {
   CreateWorkflowDto,
   UpdateWorkflowDto,
-  WorkflowResponseDto,
-  WorkflowExecutionDto,
-  WorkflowStepDto,
   WorkflowEdgeDto,
+  WorkflowExecutionDto,
+  WorkflowResponseDto,
+  WorkflowStepDto,
 } from './dto/workflow.dto';
 
 @Injectable()
@@ -35,8 +35,8 @@ export class WorkflowGenerationService {
     private readonly versionRepository: Repository<WorkflowVersionEntity>,
     @InjectRepository(WorkflowStepEntity)
     private readonly stepRepository: Repository<WorkflowStepEntity>,
-    @InjectRepository(WorkflowTriggerEntity)
-    private readonly triggerRepository: Repository<WorkflowTriggerEntity>,
+    @InjectRepository(WorkflowSubscriptionEntity)
+    private readonly subscriptionRepository: Repository<WorkflowSubscriptionEntity>,
     @InjectRepository(WorkflowEdgeEntity)
     private readonly edgeRepository: Repository<WorkflowEdgeEntity>,
     @InjectRepository(WorkflowActionRegistryEntity)
@@ -75,13 +75,14 @@ export class WorkflowGenerationService {
       });
       const savedVersion = await manager.save(version);
 
-      // 3. Create workflow trigger
-      const trigger = manager.create(WorkflowTriggerEntity, {
-        version_id: savedVersion.id,
+      // 3. Create workflow subscription (links workflow to trigger)
+      const subscription = manager.create(WorkflowSubscriptionEntity, {
+        workflow_id: savedDefinition.id,
         trigger_key: dto.trigger.triggerKey,
-        filters: dto.trigger.filters,
+        filter_conditions: dto.trigger.filters,
+        is_active: true,
       });
-      await manager.save(trigger);
+      await manager.save(subscription);
 
       // 4. Create workflow steps
       const stepMap = new Map<string, string>(); // name -> id mapping
@@ -155,10 +156,11 @@ export class WorkflowGenerationService {
       throw new NotFoundException(`Workflow with ID ${id} not found`);
     }
 
-    // Get trigger, steps, and edges
-    const [trigger, steps, edges] = await Promise.all([
-      this.triggerRepository.findOne({
-        where: { version_id: workflow.latestVersion!.id },
+    // Get subscription, steps, and edges
+    const [subscription, steps, edges] = await Promise.all([
+      this.subscriptionRepository.findOne({
+        where: { workflow_id: workflow.id },
+        relations: ['triggerRegistry'],
       }),
       this.stepRepository.find({
         where: { version_id: workflow.latestVersion!.id },
@@ -169,7 +171,7 @@ export class WorkflowGenerationService {
     ]);
 
     return this.mapToResponseDto(workflow, workflow.latestVersion!, {
-      trigger,
+      subscription,
       steps,
       edges,
     });
@@ -228,14 +230,29 @@ export class WorkflowGenerationService {
         workflow.latestVersion = latestVersion;
         await manager.save(workflow);
 
-        // Recreate trigger, steps, and edges for new version
+        // Update workflow subscription if trigger changed
         if (dto.trigger) {
-          const trigger = manager.create(WorkflowTriggerEntity, {
-            version_id: latestVersion.id,
-            trigger_key: dto.trigger.triggerKey,
-            filters: dto.trigger.filters,
-          });
-          await manager.save(trigger);
+          // Find existing subscription
+          const existingSubscription =
+            await this.subscriptionRepository.findOne({
+              where: { workflow_id: workflow.id },
+            });
+
+          if (existingSubscription) {
+            // Update existing subscription
+            existingSubscription.trigger_key = dto.trigger.triggerKey;
+            existingSubscription.filter_conditions = dto.trigger.filters;
+            await manager.save(existingSubscription);
+          } else {
+            // Create new subscription
+            const subscription = manager.create(WorkflowSubscriptionEntity, {
+              workflow_id: workflow.id,
+              trigger_key: dto.trigger.triggerKey,
+              filter_conditions: dto.trigger.filters,
+              is_active: true,
+            });
+            await manager.save(subscription);
+          }
         }
 
         // Handle steps and edges if provided
@@ -407,7 +424,12 @@ export class WorkflowGenerationService {
       createdBy: definition.created_by,
       createdAt: definition.created_at,
       updatedAt: definition.updated_at,
-      trigger: data?.trigger || version.inline_json?.trigger,
+      trigger: data?.subscription
+        ? {
+            triggerKey: data.subscription.trigger_key,
+            filters: data.subscription.filter_conditions,
+          }
+        : version.inline_json?.trigger,
       steps: data?.steps || version.inline_json?.steps || [],
       edges: data?.edges || version.inline_json?.edges || [],
     };

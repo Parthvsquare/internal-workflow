@@ -8,8 +8,7 @@ import {
 import { WorkflowActionRegistryEntity } from './entity/workflow/action-registry.entity';
 import { WorkflowStepEntity } from './entity/workflow/step.entity';
 import { WorkflowVersionEntity } from './entity/workflow/version';
-import { WorkflowActionEntity } from './entity/workflow/action';
-import { WorkflowTriggerEntity } from './entity/workflow/trigger';
+
 import { WorkflowDefinitionEntity } from './entity/workflow/definition';
 import { WorkflowEdgeEntity } from './entity/workflow/edge.entity';
 import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json';
@@ -26,8 +25,6 @@ export const ENTITY = [
   WorkflowCredentialTypeEntity,
   WorkflowUserCredentialEntity,
   WorkflowStepEntity,
-  WorkflowActionEntity,
-  WorkflowTriggerEntity,
   WorkflowVersionEntity,
   WorkflowDefinitionEntity,
   WorkflowEdgeEntity,
