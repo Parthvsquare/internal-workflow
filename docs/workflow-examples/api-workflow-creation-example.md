@@ -278,7 +278,7 @@ Here's how to extend the workflow with multiple steps:
 ```bash
 # .env
 DATABASE_URL=postgresql://user:password@localhost:5432/workflow_db
-WORKFLOW_ENGINE_URL=http://localhost:3001
+WORKFLOW_ENGINE_URL=http://localhost:4200
 DEBEZIUM_CONNECTOR_URL=http://localhost:8083
 ```
 

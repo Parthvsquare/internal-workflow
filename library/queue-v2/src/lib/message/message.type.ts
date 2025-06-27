@@ -102,14 +102,26 @@ export interface WorkflowActionPayload {
 
 /** Database change event from CDC/Debezium */
 export interface DatabaseChangeEvent {
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
-  table: string;
+  // Generic CDC fields
+  operation?: 'INSERT' | 'UPDATE' | 'DELETE';
+  table?: string;
   before?: Record<string, any>;
   after?: Record<string, any>;
   changedFields?: string[];
   transactionId?: string;
-  eventTimestamp: string;
+  eventTimestamp?: string;
   metadata?: Record<string, any>;
+
+  // Debezium-specific fields
+  op?: 'c' | 'u' | 'd' | 'r'; // create, update, delete, read
+  source?: {
+    table: string;
+    schema: string;
+    db: string;
+    ts_ms: number;
+    [key: string]: any;
+  };
+  ts_ms?: number; // Event timestamp in milliseconds
 }
 
 /** Schedule trigger payload */

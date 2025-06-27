@@ -8,6 +8,8 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
   private consumer: Consumer;
   private kafka: Kafka;
   private readonly consumerGroup: string = 'workflow-engine';
+  private isRunning = false;
+  private callbacks: Map<string, (data: any) => Promise<void>> = new Map();
 
   constructor() {
     this.kafka = new Kafka(KAFKA.KAFKA_CLIENT);
@@ -30,82 +32,67 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
     callback: (message: WorkflowMessage) => Promise<void>,
     topic = 'workflow.trigger'
   ): Promise<void> {
+    this.callbacks.set(topic, callback);
     await this.consumer.subscribe({ topic, fromBeginning: false });
-
-    await this.consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        try {
-          const workflowMessage: WorkflowMessage = {
-            topic,
-            key: message.key?.toString() || '',
-            payload: JSON.parse(message.value?.toString() || '{}'),
-            headers: this.parseHeaders(message.headers),
-          };
-
-          await callback(workflowMessage);
-          console.log(
-            `[WorkflowConsumer] Processed workflow trigger message from topic: ${topic}`
-          );
-        } catch (error) {
-          console.error(
-            `[WorkflowConsumer] Error processing workflow trigger:`,
-            error
-          );
-        }
-      },
-    });
+    await this.startConsumerIfNeeded();
   }
 
   async subscribeToWorkflowActions(
     callback: (message: WorkflowMessage) => Promise<void>,
     topic = 'workflow.action'
   ): Promise<void> {
+    this.callbacks.set(topic, callback);
     await this.consumer.subscribe({ topic, fromBeginning: false });
-
-    await this.consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        try {
-          const workflowMessage: WorkflowMessage = {
-            topic,
-            key: message.key?.toString() || '',
-            payload: JSON.parse(message.value?.toString() || '{}'),
-            headers: this.parseHeaders(message.headers),
-          };
-
-          await callback(workflowMessage);
-          console.log(
-            `[WorkflowConsumer] Processed workflow action message from topic: ${topic}`
-          );
-        } catch (error) {
-          console.error(
-            `[WorkflowConsumer] Error processing workflow action:`,
-            error
-          );
-        }
-      },
-    });
+    await this.startConsumerIfNeeded();
   }
 
   async subscribeToDatabaseChanges(
     callback: (event: DatabaseChangeEvent) => Promise<void>,
     topic = 'database.change'
   ): Promise<void> {
+    this.callbacks.set(topic, callback);
     await this.consumer.subscribe({ topic, fromBeginning: false });
+    await this.startConsumerIfNeeded();
+  }
 
+  private async startConsumerIfNeeded(): Promise<void> {
+    if (this.isRunning) return;
+
+    this.isRunning = true;
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         try {
-          const changeEvent: DatabaseChangeEvent = JSON.parse(
-            message.value?.toString() || '{}'
-          );
+          const callback = this.callbacks.get(topic);
+          if (!callback) {
+            console.warn(
+              `[WorkflowConsumer] No callback found for topic: ${topic}`
+            );
+            return;
+          }
 
-          await callback(changeEvent);
+          // Handle different message types based on topic
+          if (topic === 'workflow.trigger' || topic === 'workflow.action') {
+            const workflowMessage: WorkflowMessage = {
+              topic,
+              key: message.key?.toString() || '',
+              payload: JSON.parse(message.value?.toString() || '{}'),
+              headers: this.parseHeaders(message.headers),
+            };
+            await callback(workflowMessage);
+          } else {
+            // Database change events or other topics
+            const changeEvent: DatabaseChangeEvent = JSON.parse(
+              message.value?.toString() || '{}'
+            );
+            await callback(changeEvent);
+          }
+
           console.log(
-            `[WorkflowConsumer] Processed database change event from topic: ${topic}`
+            `[WorkflowConsumer] Processed message from topic: ${topic}`
           );
         } catch (error) {
           console.error(
-            `[WorkflowConsumer] Error processing database change:`,
+            `[WorkflowConsumer] Error processing message from topic ${topic}:`,
             error
           );
         }

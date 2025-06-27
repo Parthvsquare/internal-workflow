@@ -8,8 +8,9 @@ import {
 @Injectable()
 export class WorkflowProcessorService implements OnModuleInit {
   private readonly logger = new Logger(WorkflowProcessorService.name);
-  private readonly workflowEngineUrl =
-    process.env.WORKFLOW_ENGINE_URL || 'http://localhost:3000';
+  private readonly workflowEngineUrl = 'http://localhost:3000';
+  private readonly debeziumTopicPrefix =
+    process.env['DEBEZIUM_TOPIC_PREFIX'] || 'dbserver1';
 
   constructor(private readonly workflowConsumer: WorkflowConsumer) {}
 
@@ -66,7 +67,7 @@ export class WorkflowProcessorService implements OnModuleInit {
     // Assuming trigger key format: "table_name_table_change"
     if (trigger.key?.endsWith('_table_change')) {
       const tableName = trigger.key.replace('_table_change', '');
-      return `postgres.public.${tableName}`; // Standard Debezium topic format
+      return `${this.debeziumTopicPrefix}.public.${tableName}`;
     }
     return null;
   }
@@ -98,13 +99,23 @@ export class WorkflowProcessorService implements OnModuleInit {
 
   private transformDebeziumEvent(event: DatabaseChangeEvent): any {
     // Transform Debezium CDC event to workflow trigger format
+    // Debezium event structure: { op: 'c'|'u'|'d', before: {...}, after: {...}, source: {...}, ts_ms: number }
+    const operationMap = { c: 'INSERT', u: 'UPDATE', d: 'DELETE' };
+
     return {
-      operation: event.operation, // INSERT, UPDATE, DELETE
-      table: event.table,
-      timestamp: event.eventTimestamp,
+      operation:
+        operationMap[event.op as keyof typeof operationMap] || event.operation,
+      table: event.source?.table || event.table,
+      timestamp: event.ts_ms
+        ? new Date(event.ts_ms).toISOString()
+        : event.eventTimestamp,
       before: event.before,
       after: event.after,
-      metadata: event.metadata,
+      metadata: {
+        source: event.source,
+        ts_ms: event.ts_ms,
+        ...event.metadata,
+      },
     };
   }
 
