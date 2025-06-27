@@ -64,8 +64,9 @@ export class WorkflowProcessorService implements OnModuleInit {
           topic
         );
       } else {
+        // Pass the topic name to the handler so we can extract table name
         await this.workflowConsumer.subscribeToDatabaseChanges(
-          this.handleDatabaseChange.bind(this),
+          (event) => this.handleDatabaseChangeWithTopic(event, topic),
           topic
         );
       }
@@ -121,12 +122,46 @@ export class WorkflowProcessorService implements OnModuleInit {
     return null;
   }
 
-  private async handleDatabaseChange(event: DatabaseChangeEvent) {
+  private async handleDatabaseChange(event: any) {
     this.logger.log(`Received database change event: ${JSON.stringify(event)}`);
 
     try {
       // Transform Debezium event to workflow trigger format
       const triggerData = this.transformDebeziumEvent(event);
+
+      // Find workflows that should be triggered by this database change
+      await this.triggerMatchingWorkflows(triggerData);
+    } catch (error) {
+      this.logger.error('Error processing database change:', error);
+    }
+  }
+
+  private async handleDatabaseChangeWithTopic(event: any, topic: string) {
+    this.logger.log(
+      `Received database change event from topic ${topic}: ${JSON.stringify(
+        event
+      )}`
+    );
+
+    try {
+      // Skip snapshot reads (only process actual data changes)
+      if (event.__op === 'r') {
+        this.logger.debug('Skipping snapshot read event');
+        return;
+      }
+
+      // Extract table name from topic (e.g., "dbserver1.public.lead_sources" -> "lead_sources")
+      const tableName = topic.split('.').pop() || 'unknown';
+
+      // Transform Debezium event to workflow trigger format
+      const triggerData = this.transformDebeziumEventWithTable(
+        event,
+        tableName
+      );
+
+      this.logger.log(
+        `Transformed trigger data: ${JSON.stringify(triggerData)}`
+      );
 
       // Find workflows that should be triggered by this database change
       await this.triggerMatchingWorkflows(triggerData);
@@ -146,24 +181,74 @@ export class WorkflowProcessorService implements OnModuleInit {
     }
   }
 
-  private transformDebeziumEvent(event: DatabaseChangeEvent): any {
+  private transformDebeziumEvent(event: any): any {
     // Transform Debezium CDC event to workflow trigger format
-    // Debezium event structure: { op: 'c'|'u'|'d', before: {...}, after: {...}, source: {...}, ts_ms: number }
-    const operationMap = { c: 'INSERT', u: 'UPDATE', d: 'DELETE' };
+    // Debezium flattened event structure: { __op: 'c'|'u'|'d', __ts_ms: number, field1: value1, field2: value2, ... }
+    const operationMap = { c: 'INSERT', u: 'UPDATE', d: 'DELETE', r: 'READ' };
+
+    // Extract the data fields (non-meta fields that don't start with __)
+    const dataFields: Record<string, any> = {};
+    const metaFields: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(event)) {
+      if (key.startsWith('__')) {
+        metaFields[key] = value;
+      } else {
+        dataFields[key] = value;
+      }
+    }
+
+    // For updates, we need to determine before/after from the event
+    const operation =
+      operationMap[event.__op as keyof typeof operationMap] || 'UNKNOWN';
 
     return {
-      operation:
-        operationMap[event.op as keyof typeof operationMap] || event.operation,
-      table: event.source?.table || event.table,
-      timestamp: event.ts_ms
-        ? new Date(event.ts_ms).toISOString()
-        : event.eventTimestamp,
-      before: event.before,
-      after: event.after,
+      operation,
+      table: 'lead_sources', // TODO: Extract from topic name
+      timestamp: event.__ts_ms
+        ? new Date(event.__ts_ms).toISOString()
+        : new Date().toISOString(),
+      // For flattened format, the current data is the "after" state
+      before: operation === 'INSERT' ? null : {}, // We don't have before state in flattened format
+      after: dataFields,
       metadata: {
-        source: event.source,
-        ts_ms: event.ts_ms,
-        ...event.metadata,
+        ...metaFields,
+        debezium_format: 'flattened',
+      },
+    };
+  }
+
+  private transformDebeziumEventWithTable(event: any, tableName: string): any {
+    // Transform Debezium CDC event to workflow trigger format with table name
+    const operationMap = { c: 'INSERT', u: 'UPDATE', d: 'DELETE', r: 'READ' };
+
+    // Extract the data fields (non-meta fields that don't start with __)
+    const dataFields: Record<string, any> = {};
+    const metaFields: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(event)) {
+      if (key.startsWith('__')) {
+        metaFields[key] = value;
+      } else {
+        dataFields[key] = value;
+      }
+    }
+
+    const operation =
+      operationMap[event.__op as keyof typeof operationMap] || 'UNKNOWN';
+
+    return {
+      operation,
+      table: tableName,
+      timestamp: event.__ts_ms
+        ? new Date(event.__ts_ms).toISOString()
+        : new Date().toISOString(),
+      before: operation === 'INSERT' ? null : {},
+      after: dataFields,
+      metadata: {
+        ...metaFields,
+        debezium_format: 'flattened',
+        topic: `${this.debeziumTopicPrefix}.public.${tableName}`,
       },
     };
   }
@@ -172,7 +257,7 @@ export class WorkflowProcessorService implements OnModuleInit {
     try {
       // Call the workflow engine API to find and trigger matching workflows
       const response = await fetch(
-        `${this.workflowEngineUrl}/api/workflow-registry/trigger/${triggerData.table}_table_change`,
+        `${this.workflowEngineUrl}/api/workflow-registry/trigger/${triggerData.table}_db_change`,
         {
           method: 'POST',
           headers: {
