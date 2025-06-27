@@ -1,0 +1,88 @@
+{
+  "workflow_id": "marketing-automation-workflow-123",
+  "trigger_key": "lead_sources_db_change",
+  "is_active": true,
+  "filter_conditions": {
+    "combinator": "AND",
+    "conditions": [
+      {
+        "variable": "{{variable.operation}}",
+        "operator": "equals",
+        "value": "UPDATE",
+        "type": "string"
+      },
+      {
+        "variable": "{{variable.after.is_active}}",
+        "operator": "equals",
+        "value": false,
+        "type": "boolean"
+      },
+      {
+        "variable": "{{variable.before.is_active}}",
+        "operator": "equals",
+        "value": true,
+        "type": "boolean"
+      }
+    ]
+  },
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z",
+
+  "_example_description": "This subscription will trigger the marketing automation workflow when:",
+  "_example_conditions": [
+    "- A lead source record is UPDATED (not inserted or deleted)",
+    "- The 'is_active' field changes from true to false",
+    "- This catches when lead sources are deactivated"
+  ],
+
+  "_example_use_cases": [
+    {
+      "name": "Lead Source Deactivation Alert",
+      "description": "Send notification to marketing team when a lead source is deactivated",
+      "filter_logic": "operation = 'UPDATE' AND after.is_active = false AND before.is_active = true"
+    },
+    {
+      "name": "New Lead Source Added",
+      "description": "Update marketing campaigns when new lead source is added",
+      "filter_logic": "operation = 'INSERT'"
+    },
+    {
+      "name": "Lead Source Name Changed",
+      "description": "Update tracking systems when lead source name changes",
+      "filter_logic": "operation = 'UPDATE' AND changed_columns contains 'name'"
+    },
+    {
+      "name": "High Priority Lead Sources",
+      "description": "Special handling for lead sources with display_order < 5",
+      "filter_logic": "after.display_order < 5"
+    }
+  ],
+
+  "_payload_examples": {
+    "when_triggered": {
+      "operation": "UPDATE",
+      "table": "lead_sources",
+      "timestamp": "2024-01-15T14:30:00Z",
+      "before": {
+        "code": "SOCIAL_MEDIA",
+        "name": "Social Media Campaign",
+        "is_active": true,
+        "display_order": 3
+      },
+      "after": {
+        "code": "SOCIAL_MEDIA",
+        "name": "Social Media Campaign",
+        "is_active": false,
+        "display_order": 3
+      },
+      "changed_columns": ["is_active"]
+    },
+    "variables_available_in_workflow": {
+      "lead_source_code": "{{variable.after.code}}",
+      "lead_source_name": "{{variable.after.name}}",
+      "previous_status": "{{variable.before.is_active}}",
+      "new_status": "{{variable.after.is_active}}",
+      "change_timestamp": "{{variable.timestamp}}"
+    }
+  }
+}

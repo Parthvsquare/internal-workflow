@@ -37,20 +37,20 @@ export class WorkflowTriggerRegistryEntity {
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
 
-  @Column({ type: 'jsonb', default: {} })
-  properties_schema?: Record<string, any>;
+  @Column({ type: 'jsonb', default: {}, nullable: false })
+  properties_schema!: Record<string, any>;
 
-  @Column({ type: 'jsonb', default: {} })
-  filter_schema?: Record<string, any>;
+  @Column({ type: 'jsonb', default: {}, nullable: false })
+  filter_schema!: Record<string, any>;
 
-  @Column({ type: 'jsonb', default: {} })
-  sample_payload?: Record<string, any>;
+  @Column({ type: 'jsonb', default: {}, nullable: false })
+  sample_payload!: Record<string, any>;
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: {}, nullable: true })
   webhook_config?: Record<string, any>;
 
-  @Column({ type: 'jsonb', default: {} })
-  available_variables?: Record<string, any>;
+  @Column({ type: 'jsonb', default: {}, nullable: false })
+  available_variables!: Record<string, any>;
 
   @CreateDateColumn()
   created_at!: Date;
