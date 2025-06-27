@@ -255,6 +255,11 @@ export class WorkflowProcessorService implements OnModuleInit {
 
   private async triggerMatchingWorkflows(triggerData: any) {
     try {
+      // Generate a unique trigger event ID for this specific trigger
+      const trigger_event_id = `debezium_${
+        triggerData.table
+      }_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       // Call the workflow engine API to find and trigger matching workflows
       const response = await fetch(
         `${this.workflowEngineUrl}/api/workflow-registry/trigger/${triggerData.table}_db_change`,
@@ -266,7 +271,7 @@ export class WorkflowProcessorService implements OnModuleInit {
           body: JSON.stringify({
             eventData: triggerData,
             context: {
-              trigger_event_id: 'debezium',
+              trigger_event_id: trigger_event_id,
               timestamp: triggerData.timestamp,
             },
           }),

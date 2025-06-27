@@ -24,6 +24,7 @@ export interface WorkflowContext {
   runId?: string;
   userId?: string;
   tenantId?: string;
+  triggerEventId?: string;
 }
 
 export interface ExecutionResult {
@@ -117,7 +118,7 @@ export class WorkflowEngineService {
   async processTriggerEvent(
     triggerKey: string,
     eventData: any,
-    context: Partial<WorkflowContext> = {}
+    context: Partial<WorkflowContext> & { trigger_event_id?: string } = {}
   ): Promise<void> {
     this.logger.log(`Processing trigger event: ${triggerKey}`);
 
@@ -164,6 +165,8 @@ export class WorkflowEngineService {
             workflowId: subscription.workflow.id,
             userId: context.userId,
             tenantId: context.tenantId,
+            // Pass the trigger_event_id from context
+            triggerEventId: context.trigger_event_id,
           };
 
           // Execute workflow asynchronously
@@ -193,7 +196,8 @@ export class WorkflowEngineService {
     const run = this.runRepository.create({
       workflow_id: workflow.id,
       version_id: workflow.latestVersion!.id,
-      trigger_event_id: context.triggerData?.eventId || 'manual',
+      trigger_event_id:
+        context.triggerEventId || context.triggerData?.eventId || 'manual',
       status: 'PENDING',
       started_at: new Date(),
     });
