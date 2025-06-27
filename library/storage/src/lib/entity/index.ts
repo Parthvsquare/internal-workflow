@@ -6,6 +6,7 @@ export * from './workflow/action';
 export * from './workflow/trigger';
 export * from './workflow/version';
 export * from './workflow/definition';
+export * from './workflow/edge.entity';
 export * from './workflow/latest.json';
 export * from './workflow/daily.metrics';
 export * from './workflow/execution.log';

@@ -36,6 +36,9 @@ export class WorkflowDefinitionEntity {
   @Column({ type: 'text', nullable: true })
   segment?: string;
 
+  @Column({ type: 'uuid', nullable: true, name: 'latest_ver_id' })
+  latest_ver_id?: string;
+
   @OneToOne(() => WorkflowVersionEntity)
   @JoinColumn({ name: 'latest_ver_id' })
   latestVersion?: WorkflowVersionEntity;

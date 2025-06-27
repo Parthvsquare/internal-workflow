@@ -24,34 +24,34 @@ export class WorkflowStepEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'text' })
-  versionId!: string;
+  @Column({ type: 'uuid', name: 'version_id' })
+  version_id!: string;
 
   @Column({ type: 'text' })
   kind!: string;
 
-  @Column({ type: 'text' })
-  actionKey!: string;
+  @Column({ type: 'text', name: 'action_key', nullable: true })
+  action_key?: string;
 
-  @Column({ type: 'jsonb' })
-  cfg!: Record<string, any>;
+  @Column({ type: 'jsonb', nullable: true })
+  cfg?: Record<string, any>;
 
-  @Column({ type: 'text' })
-  name!: string;
+  @Column({ type: 'text', nullable: true })
+  name?: string;
 
-  @Column({ type: 'uuid' })
-  credentialId!: string;
+  @Column({ type: 'uuid', name: 'credential_id', nullable: true })
+  credential_id?: string;
 
   @ManyToOne('WorkflowUserCredentialEntity')
   @JoinColumn({ name: 'credential_id' })
   credential?: any;
 
-  @Column({ type: 'text' })
-  resource!: string;
+  @Column({ type: 'text', nullable: true })
+  resource?: string;
 
-  @Column({ type: 'text' })
-  operation!: string;
+  @Column({ type: 'text', nullable: true })
+  operation?: string;
 
-  @Column({ type: 'jsonb' })
-  displayOptions!: Record<string, any>;
+  @Column({ type: 'jsonb', name: 'display_options', nullable: true })
+  display_options?: Record<string, any>;
 }

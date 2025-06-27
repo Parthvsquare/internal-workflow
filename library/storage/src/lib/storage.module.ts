@@ -11,6 +11,7 @@ import { WorkflowVersionEntity } from './entity/workflow/version';
 import { WorkflowActionEntity } from './entity/workflow/action';
 import { WorkflowTriggerEntity } from './entity/workflow/trigger';
 import { WorkflowDefinitionEntity } from './entity/workflow/definition';
+import { WorkflowEdgeEntity } from './entity/workflow/edge.entity';
 import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json';
 import { DailyWorkflowMetricsEntity } from './entity/workflow/daily.metrics';
 import { ExecutionLogEntity } from './entity/workflow/execution.log';
@@ -28,6 +29,7 @@ export const ENTITY = [
   WorkflowTriggerEntity,
   WorkflowVersionEntity,
   WorkflowDefinitionEntity,
+  WorkflowEdgeEntity,
   WorkflowLatestJsonEntity,
   DailyWorkflowMetricsEntity,
   ExecutionLogEntity,

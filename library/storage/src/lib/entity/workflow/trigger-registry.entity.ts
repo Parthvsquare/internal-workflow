@@ -11,6 +11,9 @@ import {
 @Index('idx_workflow_trigger_registry_key', ['key'])
 export class WorkflowTriggerRegistryEntity {
   @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ type: 'text', unique: true, nullable: false })
   key!: string;
 
   @Column({ type: 'text', nullable: false })
