@@ -16,13 +16,10 @@
       "path": "./apps/scheduler-service"
     },
     {
-      "path": "./library/queue"
-    },
-    {
       "path": "./apps/worker-service"
     },
     {
-      "path": "./library/queue"
+      "path": "./library/queue-v2"
     }
   ]
 }

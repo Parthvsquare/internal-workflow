@@ -3,7 +3,7 @@ import { FixStuckScheduledCampaignLeadsHandler } from '../../handler';
 import axios from 'axios';
 import { InternalWorkflowStorageModule } from '@internal-workflow/storage';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { KAFKA } from '@internal-workflow/queue';
+import { KAFKA } from '@internal-workflow/queue-v2';
 
 const MODULES = [InternalWorkflowStorageModule];
 

@@ -2,8 +2,15 @@ import { KafkaConfig } from 'kafkajs';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
 
-const MESSAGE_URL = process.env['MESSAGE_BROKER_URL'] ?? '';
-const BROKER_URLS = MESSAGE_URL.split(',');
+const MESSAGE_URL = process.env['MESSAGE_BROKER_URL'] ?? 'localhost:9092';
+const BROKER_URLS = MESSAGE_URL.split(',').filter(
+  (url) => url.trim().length > 0
+);
+// Ensure we have at least one broker
+if (BROKER_URLS.length === 0) {
+  BROKER_URLS.push('localhost:9092');
+}
+
 const BROKER_USERNAME = process.env['MESSAGE_BROKER_USERNAME'] ?? undefined;
 const BROKER_PASSWORD = process.env['MESSAGE_BROKER_PASSWORD'] ?? undefined;
 

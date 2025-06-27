@@ -1,4 +1,4 @@
-export * from './lib/queue.module';
+export * from './lib/queue-v2.module';
 export * from './lib/interface/queue.interface';
 export * from './lib/client/queue.client';
 export * from './lib/client/queue.config';

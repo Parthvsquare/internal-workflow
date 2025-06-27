@@ -7,10 +7,9 @@ import { DatabaseChangeEvent, WorkflowMessage } from '../message/message.type';
 export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
   private consumer: Consumer;
   private kafka: Kafka;
-  private readonly consumerGroup: string;
+  private readonly consumerGroup: string = 'workflow-engine';
 
-  constructor(consumerGroup = 'workflow-engine') {
-    this.consumerGroup = consumerGroup;
+  constructor() {
     this.kafka = new Kafka(KAFKA.KAFKA_CLIENT);
     this.consumer = this.kafka.consumer({ groupId: this.consumerGroup });
   }

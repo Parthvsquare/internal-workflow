@@ -1,5 +1,5 @@
 {
-  "name": "@internal-workflow/queue",
+  "name": "@internal-workflow/queue-v2",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",

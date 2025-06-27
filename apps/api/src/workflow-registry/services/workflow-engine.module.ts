@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InternalWorkflowStorageModule } from '@internal-workflow/storage';
-import { QueueModule } from '@internal-workflow/queue';
+import { QueueModule } from '@internal-workflow/queue-v2';
 
 // Import all workflow entities
 import {

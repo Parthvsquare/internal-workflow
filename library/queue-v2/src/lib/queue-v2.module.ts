@@ -6,7 +6,6 @@ import { WorkflowManager } from './managers/workflow.manager';
 import { QUEUE_CLIENT } from './interface/queue.interface';
 import { KAFKA, KAFKA_PRODUCER_NAME } from './interface/kafka.constant';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-// import { CustomerIOManager } from './managers';
 
 const IMPORTS = [
   ClientsModule.register([
