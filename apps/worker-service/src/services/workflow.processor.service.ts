@@ -26,24 +26,54 @@ export class WorkflowProcessorService implements OnModuleInit {
     // Get active trigger registries to determine which topics to subscribe to
     const triggerRegistries = await this.loadTriggerRegistries();
 
-    // Subscribe to Debezium topics based on trigger registries
+    console.log(
+      '===> ~ WorkflowProcessorService ~ startListening ~ triggerRegistries:',
+      triggerRegistries
+    );
+
+    // Collect all topics to subscribe to
+    const topicsToSubscribe: string[] = [];
+
+    // Add Debezium topics based on trigger registries
     for (const trigger of triggerRegistries) {
-      if (trigger.event_source === 'debezium') {
+      if (trigger.eventSource === 'debezium') {
         const topicName = this.getDebeziumTopicName(trigger);
+
+        console.log(
+          '===> ~ WorkflowProcessorService ~ startListening ~ topicName:',
+          topicName
+        );
+
         if (topicName) {
-          this.logger.log(`Subscribing to Debezium topic: ${topicName}`);
-          await this.workflowConsumer.subscribeToDatabaseChanges(
-            this.handleDatabaseChange.bind(this),
-            topicName
+          this.logger.log(
+            `Planning to subscribe to Debezium topic: ${topicName}`
           );
+          topicsToSubscribe.push(topicName);
         }
       }
     }
 
-    // Listen to workflow trigger events
-    await this.workflowConsumer.subscribeToWorkflowTriggers(
-      this.handleWorkflowTrigger.bind(this)
-    );
+    // Add workflow trigger topic
+    topicsToSubscribe.push('workflow.trigger');
+
+    // Subscribe to all topics at once
+    for (const topic of topicsToSubscribe) {
+      if (topic === 'workflow.trigger') {
+        await this.workflowConsumer.subscribeToWorkflowTriggers(
+          this.handleWorkflowTrigger.bind(this),
+          topic
+        );
+      } else {
+        await this.workflowConsumer.subscribeToDatabaseChanges(
+          this.handleDatabaseChange.bind(this),
+          topic
+        );
+      }
+    }
+
+    // Start the consumer after all subscriptions are registered
+    await this.workflowConsumer.startConsumer();
+    this.logger.log('Workflow consumer started successfully');
   }
 
   private async loadTriggerRegistries(): Promise<any[]> {
@@ -65,9 +95,28 @@ export class WorkflowProcessorService implements OnModuleInit {
   private getDebeziumTopicName(trigger: any): string | null {
     // Extract table name from trigger properties or key
     // Assuming trigger key format: "table_name_table_change"
-    if (trigger.key?.endsWith('_table_change')) {
-      const tableName = trigger.key.replace('_table_change', '');
-      return `${this.debeziumTopicPrefix}.public.${tableName}`;
+
+    console.log(
+      '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ trigger:',
+      trigger
+    );
+
+    if (trigger.key?.endsWith('_db_change')) {
+      const tableName = trigger.key.replace('_db_change', '');
+
+      console.log(
+        '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ tableName:',
+        tableName
+      );
+
+      const dbTableName = `${this.debeziumTopicPrefix}.public.${tableName}`;
+
+      console.log(
+        '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ dbTableName:',
+        dbTableName
+      );
+
+      return dbTableName;
     }
     return null;
   }

@@ -10,6 +10,7 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
   private readonly consumerGroup: string = 'workflow-engine';
   private isRunning = false;
   private callbacks: Map<string, (data: any) => Promise<void>> = new Map();
+  private pendingSubscriptions: Set<string> = new Set();
 
   constructor() {
     this.kafka = new Kafka(KAFKA.KAFKA_CLIENT);
@@ -33,8 +34,7 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
     topic = 'workflow.trigger'
   ): Promise<void> {
     this.callbacks.set(topic, callback);
-    await this.consumer.subscribe({ topic, fromBeginning: false });
-    await this.startConsumerIfNeeded();
+    this.pendingSubscriptions.add(topic);
   }
 
   async subscribeToWorkflowActions(
@@ -42,8 +42,7 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
     topic = 'workflow.action'
   ): Promise<void> {
     this.callbacks.set(topic, callback);
-    await this.consumer.subscribe({ topic, fromBeginning: false });
-    await this.startConsumerIfNeeded();
+    this.pendingSubscriptions.add(topic);
   }
 
   async subscribeToDatabaseChanges(
@@ -51,14 +50,32 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
     topic = 'database.change'
   ): Promise<void> {
     this.callbacks.set(topic, callback);
-    await this.consumer.subscribe({ topic, fromBeginning: false });
-    await this.startConsumerIfNeeded();
+    this.pendingSubscriptions.add(topic);
   }
 
-  private async startConsumerIfNeeded(): Promise<void> {
-    if (this.isRunning) return;
+  async startConsumer(): Promise<void> {
+    if (this.isRunning) {
+      console.warn('[WorkflowConsumer] Consumer is already running');
+      return;
+    }
 
+    if (this.pendingSubscriptions.size === 0) {
+      console.warn(
+        '[WorkflowConsumer] No subscriptions to start consumer with'
+      );
+      return;
+    }
+
+    // Subscribe to all pending topics at once
+    for (const topic of this.pendingSubscriptions) {
+      console.log(`[WorkflowConsumer] Subscribing to topic: ${topic}`);
+      await this.consumer.subscribe({ topic, fromBeginning: false });
+    }
+
+    this.pendingSubscriptions.clear();
     this.isRunning = true;
+
+    console.log('[WorkflowConsumer] Starting consumer...');
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         try {
@@ -116,5 +133,29 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
   async commitOffsets(): Promise<void> {
     await this.consumer.commitOffsets([]);
     console.log('[WorkflowConsumer] Committed offsets');
+  }
+
+  async stopConsumer(): Promise<void> {
+    if (this.isRunning) {
+      await this.consumer.stop();
+      this.isRunning = false;
+      console.log('[WorkflowConsumer] Consumer stopped');
+    }
+  }
+
+  async addSubscription(
+    topic: string,
+    callback: (event: DatabaseChangeEvent | WorkflowMessage) => Promise<void>
+  ): Promise<void> {
+    this.callbacks.set(topic, callback);
+    this.pendingSubscriptions.add(topic);
+  }
+
+  getPendingSubscriptions(): string[] {
+    return Array.from(this.pendingSubscriptions);
+  }
+
+  isConsumerRunning(): boolean {
+    return this.isRunning;
   }
 }
