@@ -42,6 +42,12 @@ This defines the form fields users fill out to configure the trigger.
       "default": "POST"
     },
     {
+      "displayName": "URL",
+      "name": "url",
+      "type": "string",
+      "default": "https://jsonplaceholder.typicode.com/todos"
+    },
+    {
       "displayName": "Authentication Required",
       "name": "authRequired",
       "type": "boolean",
@@ -93,7 +99,7 @@ Defines what fields users can filter on when the trigger fires.
     {
       "displayName": "Lead Score",
       "name": "score",
-      "type": "number",
+      "type": "number", //input type
       "operators": ["equals", "greater_than", "less_than", "between"]
     }
   ]
