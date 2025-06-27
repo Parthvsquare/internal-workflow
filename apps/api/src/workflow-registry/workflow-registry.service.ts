@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import {
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
@@ -19,6 +21,8 @@ import {
   UpdateTriggerRegistryDto,
   TriggerRegistryResponseDto,
 } from './dto/trigger-registry.dto';
+// import { HttpService } from '@nestjs/axios';
+// import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class WorkflowRegistryService {
@@ -26,7 +30,8 @@ export class WorkflowRegistryService {
     @InjectRepository(WorkflowActionRegistryEntity)
     private readonly actionRepository: Repository<WorkflowActionRegistryEntity>,
     @InjectRepository(WorkflowTriggerRegistryEntity)
-    private readonly triggerRepository: Repository<WorkflowTriggerRegistryEntity>
+    private readonly triggerRepository: Repository<WorkflowTriggerRegistryEntity>,
+    private dataSource: DataSource // private httpService: HttpService
   ) {}
 
   // Action Registry Methods
@@ -291,5 +296,121 @@ export class WorkflowRegistryService {
       createdAt: trigger.created_at,
       updatedAt: trigger.updated_at,
     };
+  }
+
+  async resolveDataSource(
+    dataSourceConfig: any,
+    context?: any
+  ): Promise<Array<{ name: string; value: string }>> {
+    switch (dataSourceConfig.type) {
+      case 'database':
+        return this.resolveDatabaseDataSource(dataSourceConfig, context);
+      case 'static':
+        return dataSourceConfig.options || [];
+      default:
+        throw new HttpException(
+          `Unknown data source type: ${dataSourceConfig.type}`,
+          HttpStatus.BAD_REQUEST
+        );
+    }
+  }
+
+  private async resolveDatabaseDataSource(
+    config: any,
+    context?: any
+  ): Promise<Array<{ name: string; value: string }>> {
+    try {
+      let query = `SELECT ${config.valueColumn} as value, ${config.labelColumn} as name FROM ${config.table}`;
+
+      if (config.whereClause) {
+        const whereClause = this.interpolateVariables(
+          config.whereClause,
+          context
+        );
+        query += ` WHERE ${whereClause}`;
+      }
+
+      if (config.orderBy) {
+        query += ` ORDER BY ${config.orderBy}`;
+      }
+
+      const result = await this.dataSource.query(query);
+      return result.map((row: any) => ({
+        name: row.name,
+        value: row.value,
+      }));
+    } catch (error) {
+      console.error('Error resolving database data source:', error);
+      return [];
+    }
+  }
+
+  private interpolateVariables(template: any, context?: any): any {
+    if (typeof template === 'string') {
+      return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+        return context?.[key] || match;
+      });
+    } else if (typeof template === 'object' && template !== null) {
+      const result: any = {};
+      for (const [key, value] of Object.entries(template)) {
+        result[key] = this.interpolateVariables(value, context);
+      }
+      return result;
+    }
+    return template;
+  }
+
+  async getTriggerWithResolvedSchema(key: string, context?: any): Promise<any> {
+    const trigger = await this.triggerRepository.findOne({ where: { key } });
+    if (!trigger) {
+      throw new HttpException('Trigger not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Resolve dynamic data sources in filter_schema
+    if (trigger.filter_schema && Array.isArray(trigger.filter_schema)) {
+      for (const field of trigger.filter_schema) {
+        if (field.dataSource) {
+          field.options = await this.resolveDataSource(
+            field.dataSource,
+            context
+          );
+        }
+      }
+    }
+
+    // Resolve dynamic data sources in properties_schema
+    if (trigger.properties_schema && Array.isArray(trigger.properties_schema)) {
+      for (const property of trigger.properties_schema) {
+        if (property.dataSource) {
+          property.options = await this.resolveDataSource(
+            property.dataSource,
+            context
+          );
+        }
+      }
+    }
+
+    return trigger;
+  }
+
+  async getActionWithResolvedSchema(key: string, context?: any): Promise<any> {
+    const action = await this.actionRepository.findOne({ where: { key } });
+    if (!action) {
+      throw new HttpException('Action not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Resolve dynamic data sources in properties_schema
+    if (action.properties_schema && Array.isArray(action.properties_schema)) {
+      for (const property of action.properties_schema) {
+        if (property.dataSource) {
+          property.options = await this.resolveDataSource(
+            property.dataSource,
+            context
+          );
+        }
+      }
+    }
+
+    return action;
   }
 }

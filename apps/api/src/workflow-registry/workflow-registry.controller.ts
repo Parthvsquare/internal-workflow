@@ -331,6 +331,32 @@ export class WorkflowRegistryController {
     return this.workflowRegistryService.deleteTrigger(key);
   }
 
+  @Get('trigger/:key/resolved')
+  async getTriggerWithResolvedSchema(
+    @Param('key') key: string,
+    @Query('tenantId') tenantId?: string,
+    @Query('userId') userId?: string
+  ) {
+    const context = { tenant_id: tenantId, user_id: userId };
+    return this.workflowRegistryService.getTriggerWithResolvedSchema(
+      key,
+      context
+    );
+  }
+
+  @Get('action/:key/resolved')
+  async getActionWithResolvedSchema(
+    @Param('key') key: string,
+    @Query('tenantId') tenantId?: string,
+    @Query('userId') userId?: string
+  ) {
+    const context = { tenant_id: tenantId, user_id: userId };
+    return this.workflowRegistryService.getActionWithResolvedSchema(
+      key,
+      context
+    );
+  }
+
   // Utility Endpoints
   @Get('schema/action-properties')
   @ApiOperation({
