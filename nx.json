@@ -27,7 +27,7 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": ["library/storage/*"]
+      "exclude": ["library/storage/*", "library/queue/*"]
     },
     {
       "plugin": "@nx/react/router-plugin",
@@ -78,7 +78,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["library/storage/*"],
+      "include": ["library/storage/*", "library/queue/*"],
       "options": {
         "typecheck": {
           "targetName": "typecheck"

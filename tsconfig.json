@@ -20,6 +20,9 @@
     },
     {
       "path": "./apps/worker-service"
+    },
+    {
+      "path": "./library/queue"
     }
   ]
 }

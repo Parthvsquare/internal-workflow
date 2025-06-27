@@ -15,9 +15,6 @@
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
     {
-      "path": "../../library/queue/tsconfig.lib.json"
-    },
-    {
       "path": "../../library/storage/tsconfig.lib.json"
     }
   ]

@@ -12,11 +12,5 @@
     },
     "./package.json": "./package.json"
   },
-  "dependencies": {
-    "tslib": "^2.3.0",
-    "@nestjs/common": "^10.0.2",
-    "kafkajs": "2.2.4",
-    "@internal-workflow/storage": "0.0.1",
-    "@nestjs/microservices": "^10.4.8"
-  }
+  "dependencies": {}
 }

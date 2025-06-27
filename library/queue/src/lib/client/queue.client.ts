@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { KAFKA_PRODUCER_NAME } from '../interface/kafka.constant';
 import { IQueueClient } from '../interface/queue.interface';
 import { WorkflowMessage } from '../message/message.type';
-import { KAFKA_PRODUCER_NAME } from '../interface/kafka.constant';
 
 /** A queue client that uses Kafka for workflow messages */
 @Injectable()
