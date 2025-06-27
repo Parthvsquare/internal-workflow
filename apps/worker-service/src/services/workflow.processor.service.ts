@@ -266,7 +266,7 @@ export class WorkflowProcessorService implements OnModuleInit {
           body: JSON.stringify({
             eventData: triggerData,
             context: {
-              source: 'debezium',
+              trigger_event_id: 'debezium',
               timestamp: triggerData.timestamp,
             },
           }),

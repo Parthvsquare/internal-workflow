@@ -136,6 +136,11 @@ export class WorkflowEngineService {
       const workflowSubscriptions =
         await this.findWorkflowSubscriptionsByTrigger(triggerKey);
 
+      console.log(
+        '===> ~ WorkflowEngineService ~ workflowSubscriptions:',
+        workflowSubscriptions
+      );
+
       for (const subscription of workflowSubscriptions) {
         if (!subscription.workflow) {
           continue;
@@ -145,6 +150,11 @@ export class WorkflowEngineService {
         const shouldExecute = await this.shouldExecuteWorkflow(
           subscription,
           eventData
+        );
+
+        console.log(
+          '===> ~ WorkflowEngineService ~ shouldExecute:',
+          shouldExecute
         );
 
         if (shouldExecute) {

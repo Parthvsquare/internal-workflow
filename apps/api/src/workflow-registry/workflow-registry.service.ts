@@ -204,6 +204,7 @@ export class WorkflowRegistryService {
       throw new NotFoundException(`Trigger with key '${key}' not found`);
     }
 
+    if (updateDto.eventSource) trigger.event_source = updateDto.eventSource;
     if (updateDto.name) trigger.name = updateDto.name;
     if (updateDto.displayName) trigger.display_name = updateDto.displayName;
     if (updateDto.description !== undefined)
