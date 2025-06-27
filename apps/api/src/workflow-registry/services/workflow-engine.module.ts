@@ -12,6 +12,7 @@ import {
   WorkflowVersionEntity,
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
+  WorkflowSubscriptionEntity,
   TaskEntity,
 } from '@internal-workflow/storage';
 
@@ -20,6 +21,7 @@ import { WorkflowEngineService } from './workflow-engine.service';
 import { WorkflowFilterService } from './workflow-filter.service';
 import { WorkflowActionExecutor } from './workflow-action.executor';
 import { WorkflowTriggerProcessor } from './workflow-trigger.processor';
+import { WorkflowSubscriptionService } from './workflow-subscription.service';
 
 const ENTITIES = [
   WorkflowDefinitionEntity,
@@ -29,6 +31,7 @@ const ENTITIES = [
   WorkflowVersionEntity,
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
+  WorkflowSubscriptionEntity,
   TaskEntity,
 ];
 
@@ -37,6 +40,7 @@ const SERVICES = [
   WorkflowFilterService,
   WorkflowActionExecutor,
   WorkflowTriggerProcessor,
+  WorkflowSubscriptionService,
 ];
 
 @Module({

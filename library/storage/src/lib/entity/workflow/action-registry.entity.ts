@@ -28,8 +28,8 @@ export class WorkflowActionRegistryEntity {
   @Column({ type: 'text', nullable: true })
   category?: string;
 
-  @Column({ type: 'text', nullable: true })
-  group?: string;
+  @Column({ type: 'text', array: true, default: ['action'] })
+  group!: string[];
 
   @Column({ type: 'text', nullable: true })
   icon?: string;
@@ -39,6 +39,9 @@ export class WorkflowActionRegistryEntity {
 
   @Column({ type: 'text', nullable: true })
   documentation_url?: string;
+
+  @Column({ type: 'text', nullable: true })
+  execution_type?: string;
 
   @Column({ type: 'int', default: 1 })
   version!: number;
@@ -60,6 +63,9 @@ export class WorkflowActionRegistryEntity {
 
   @Column({ type: 'jsonb', default: {} })
   sample_payload?: Record<string, any>;
+
+  @Column({ type: 'jsonb', default: {} })
+  methods?: Record<string, any>;
 
   @CreateDateColumn()
   created_at!: Date;

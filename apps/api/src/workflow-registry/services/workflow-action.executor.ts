@@ -21,7 +21,7 @@ export class WorkflowActionExecutor {
   ) {}
 
   /**
-   * Execute an action based on its registry key
+   * Execute an action based on its registry key - completely dynamic
    */
   async executeAction(
     actionKey: string,
@@ -43,22 +43,16 @@ export class WorkflowActionExecutor {
         };
       }
 
-      // Execute based on action type
-      switch (action.name) {
-        case 'taskManagement':
-          return await this.executeTaskManagementAction(config, context);
+      // Execute based on execution type from registry
+      switch (action.execution_type) {
+        case 'internal_function':
+          return await this.executeInternalFunction(action, config, context);
 
-        case 'sendEmail':
-          return await this.executeSendEmailAction(config, context);
+        case 'external_api':
+          return await this.executeExternalApi(action, config, context);
 
-        case 'sendSms':
-          return await this.executeSendSmsAction(config, context);
-
-        case 'slackNotification':
-          return await this.executeSlackNotificationAction(config, context);
-
-        case 'googleDriveUpload':
-          return await this.executeGoogleDriveUploadAction(config, context);
+        case 'conditional':
+          return await this.executeConditional(action, config, context);
 
         default:
           return await this.executeGenericAction(action, config, context);
@@ -73,404 +67,379 @@ export class WorkflowActionExecutor {
   }
 
   /**
-   * Execute task management actions (create, update, delete, get, list)
+   * Execute internal function based on action category/name
    */
-  private async executeTaskManagementAction(
+  private async executeInternalFunction(
+    action: WorkflowActionRegistryEntity,
     config: any,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
-    const operation = config.operation;
+    this.logger.log(`Executing internal function: ${action.name}`);
 
-    switch (operation) {
-      case 'create':
-        return await this.createTask(config, context);
-      case 'update':
-        return await this.updateTask(config, context);
-      case 'delete':
-        return await this.deleteTask(config, context);
-      case 'get':
-        return await this.getTask(config, context);
-      case 'list':
-        return await this.listTasks(config, context);
-      default:
-        return {
-          success: false,
-          error: `Unknown task operation: ${operation}`,
-        };
+    // Route to appropriate internal function based on action name/category
+    if (action.name === 'taskManagement' || action.category === 'task') {
+      return await this.executeTaskManagement(action, config, context);
     }
-  }
 
-  /**
-   * Create a new task
-   */
-  private async createTask(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    try {
-      const task = this.taskRepository.create({
-        title: config.title,
-        description: config.description,
-        dueDate: config.dueDate ? new Date(config.dueDate) : undefined,
-        status: config.status || TaskStatus.PENDING,
-        entityType: config.entityType || TaskRelatedEntityType.CRM_LEAD,
-        cronExpression: config.cronExpression,
-      });
-
-      const savedTask = await this.taskRepository.save(task);
-
-      this.logger.log(`Task created: ${savedTask.entityId}`);
-
-      return {
-        success: true,
-        result: {
-          taskId: savedTask.entityId,
-          title: savedTask.title,
-          status: savedTask.status,
-          createdAt: savedTask.createdAt,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to create task: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      };
+    if (action.category === 'communication') {
+      return await this.executeCommunicationAction(action, config, context);
     }
-  }
 
-  /**
-   * Update an existing task
-   */
-  private async updateTask(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    try {
-      const taskId = config.taskId;
-      if (!taskId) {
-        return {
-          success: false,
-          error: 'Task ID is required for update operation',
-        };
-      }
-
-      const task = await this.taskRepository.findOne({
-        where: { entityId: taskId },
-      });
-
-      if (!task) {
-        return {
-          success: false,
-          error: `Task not found: ${taskId}`,
-        };
-      }
-
-      // Update task fields
-      if (config.title !== undefined) task.title = config.title;
-      if (config.description !== undefined)
-        task.description = config.description;
-      if (config.dueDate !== undefined)
-        task.dueDate = config.dueDate ? new Date(config.dueDate) : undefined;
-      if (config.status !== undefined) task.status = config.status;
-      if (config.entityType !== undefined) task.entityType = config.entityType;
-      if (config.cronExpression !== undefined)
-        task.cronExpression = config.cronExpression;
-
-      const updatedTask = await this.taskRepository.save(task);
-
-      this.logger.log(`Task updated: ${updatedTask.entityId}`);
-
-      return {
-        success: true,
-        result: {
-          taskId: updatedTask.entityId,
-          title: updatedTask.title,
-          status: updatedTask.status,
-          updatedAt: updatedTask.updatedAt,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to update task: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      };
+    if (action.category === 'database') {
+      return await this.executeDatabaseAction(action, config, context);
     }
-  }
 
-  /**
-   * Delete a task
-   */
-  private async deleteTask(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    try {
-      const taskId = config.taskId;
-      if (!taskId) {
-        return {
-          success: false,
-          error: 'Task ID is required for delete operation',
-        };
-      }
-
-      const result = await this.taskRepository.delete({ entityId: taskId });
-
-      if (result.affected === 0) {
-        return {
-          success: false,
-          error: `Task not found: ${taskId}`,
-        };
-      }
-
-      this.logger.log(`Task deleted: ${taskId}`);
-
-      return {
-        success: true,
-        result: { taskId, deleted: true },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to delete task: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      };
-    }
-  }
-
-  /**
-   * Get a specific task
-   */
-  private async getTask(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    try {
-      const taskId = config.taskId;
-      if (!taskId) {
-        return {
-          success: false,
-          error: 'Task ID is required for get operation',
-        };
-      }
-
-      const task = await this.taskRepository.findOne({
-        where: { entityId: taskId },
-      });
-
-      if (!task) {
-        return {
-          success: false,
-          error: `Task not found: ${taskId}`,
-        };
-      }
-
-      return {
-        success: true,
-        result: {
-          taskId: task.entityId,
-          title: task.title,
-          description: task.description,
-          dueDate: task.dueDate,
-          status: task.status,
-          entityType: task.entityType,
-          cronExpression: task.cronExpression,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to get task: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      };
-    }
-  }
-
-  /**
-   * List tasks with optional filters
-   */
-  private async listTasks(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    try {
-      const filters = config.filters || {};
-      const limit = config.limit || 50;
-      const offset = config.offset || 0;
-
-      const queryBuilder = this.taskRepository.createQueryBuilder('task');
-
-      // Apply filters
-      if (filters.status && Array.isArray(filters.status)) {
-        queryBuilder.andWhere('task.status IN (:...statuses)', {
-          statuses: filters.status,
-        });
-      }
-
-      if (filters.entityType) {
-        queryBuilder.andWhere('task.entityType = :entityType', {
-          entityType: filters.entityType,
-        });
-      }
-
-      if (filters.dueDateFrom) {
-        queryBuilder.andWhere('task.dueDate >= :dueDateFrom', {
-          dueDateFrom: new Date(filters.dueDateFrom),
-        });
-      }
-
-      if (filters.dueDateTo) {
-        queryBuilder.andWhere('task.dueDate <= :dueDateTo', {
-          dueDateTo: new Date(filters.dueDateTo),
-        });
-      }
-
-      // Apply pagination
-      queryBuilder.limit(limit).offset(offset);
-
-      // Order by creation date
-      queryBuilder.orderBy('task.createdAt', 'DESC');
-
-      const [tasks, total] = await queryBuilder.getManyAndCount();
-
-      return {
-        success: true,
-        result: {
-          tasks: tasks.map((task) => ({
-            taskId: task.entityId,
-            title: task.title,
-            description: task.description,
-            dueDate: task.dueDate,
-            status: task.status,
-            entityType: task.entityType,
-            createdAt: task.createdAt,
-            updatedAt: task.updatedAt,
-          })),
-          total,
-          limit,
-          offset,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to list tasks: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      };
-    }
-  }
-
-  /**
-   * Execute email sending action (placeholder implementation)
-   */
-  private async executeSendEmailAction(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    // TODO: Implement actual email sending logic
-    this.logger.log(`Send email action executed (placeholder)`, {
-      to: config.to,
-      subject: config.subject,
-      body: config.body,
-    });
-
+    // Default internal function execution
     return {
       success: true,
       result: {
-        action: 'send_email',
-        to: config.to,
-        subject: config.subject,
-        status: 'sent',
-        messageId: `msg_${Date.now()}`,
-      },
-    };
-  }
-
-  /**
-   * Execute SMS sending action (placeholder implementation)
-   */
-  private async executeSendSmsAction(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    // TODO: Implement actual SMS sending logic
-    this.logger.log(`Send SMS action executed (placeholder)`, {
-      to: config.to,
-      message: config.message,
-    });
-
-    return {
-      success: true,
-      result: {
-        action: 'send_sms',
-        to: config.to,
-        message: config.message,
-        status: 'sent',
-        messageId: `sms_${Date.now()}`,
-      },
-    };
-  }
-
-  /**
-   * Execute Slack notification action (placeholder implementation)
-   */
-  private async executeSlackNotificationAction(
-    config: any,
-    context: WorkflowContext
-  ): Promise<ExecutionResult> {
-    // TODO: Implement actual Slack API integration
-    this.logger.log(`Slack notification action executed (placeholder)`, {
-      channel: config.channel,
-      message: config.message,
-    });
-
-    return {
-      success: true,
-      result: {
-        action: 'slack_notification',
-        channel: config.channel,
-        message: config.message,
-        status: 'sent',
+        action: action.name,
+        category: action.category,
+        executed: true,
+        config,
         timestamp: new Date().toISOString(),
       },
     };
   }
 
   /**
-   * Execute Google Drive upload action (placeholder implementation)
+   * Execute task management operations dynamically
    */
-  private async executeGoogleDriveUploadAction(
+  private async executeTaskManagement(
+    action: WorkflowActionRegistryEntity,
     config: any,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
-    // TODO: Implement actual Google Drive API integration
-    this.logger.log(`Google Drive upload action executed (placeholder)`, {
-      fileName: config.fileName,
-      folderId: config.folderId,
-    });
+    const operation = config.operation || 'create';
+
+    try {
+      switch (operation) {
+        case 'create':
+          return await this.createTask(config, context);
+        case 'update':
+          return await this.updateTask(config, context);
+        case 'delete':
+          return await this.deleteTask(config, context);
+        case 'get':
+          return await this.getTask(config, context);
+        case 'list':
+          return await this.listTasks(config, context);
+        default:
+          return {
+            success: false,
+            error: `Unknown task operation: ${operation}`,
+          };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Task operation failed',
+      };
+    }
+  }
+
+  /**
+   * Create task from trigger data
+   */
+  private async createTask(
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    // Extract task data from config and context
+    const taskData = {
+      title: config.title || this.extractFromContext('title', context),
+      description:
+        config.description || this.extractFromContext('description', context),
+      dueDate: config.dueDate ? new Date(config.dueDate) : undefined,
+      status: (config.status as TaskStatus) || TaskStatus.PENDING,
+      entityType:
+        (config.entityType as TaskRelatedEntityType) ||
+        TaskRelatedEntityType.CRM_LEAD,
+      cronExpression: config.cronExpression,
+    };
+
+    // Validate required fields
+    if (!taskData.title) {
+      return {
+        success: false,
+        error: 'Task title is required',
+      };
+    }
+
+    const task = this.taskRepository.create(taskData);
+    const savedTask = await this.taskRepository.save(task);
+
+    this.logger.log(`Task created: ${savedTask.entityId}`);
 
     return {
       success: true,
       result: {
-        action: 'google_drive_upload',
-        fileName: config.fileName,
-        folderId: config.folderId,
-        fileId: `file_${Date.now()}`,
-        status: 'uploaded',
+        entityId: savedTask.entityId,
+        title: savedTask.title,
+        status: savedTask.status,
+        createdAt: savedTask.createdAt,
       },
     };
   }
 
   /**
-   * Execute generic action (for custom actions)
+   * Update existing task
+   */
+  private async updateTask(
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    if (!config.taskId) {
+      return {
+        success: false,
+        error: 'Task ID is required for update operation',
+      };
+    }
+
+    const task = await this.taskRepository.findOne({
+      where: { entityId: config.taskId },
+    });
+
+    if (!task) {
+      return {
+        success: false,
+        error: `Task not found: ${config.taskId}`,
+      };
+    }
+
+    // Update fields if provided
+    if (config.title) task.title = config.title;
+    if (config.description) task.description = config.description;
+    if (config.dueDate) task.dueDate = new Date(config.dueDate);
+    if (config.status) task.status = config.status;
+
+    const updatedTask = await this.taskRepository.save(task);
+
+    return {
+      success: true,
+      result: {
+        entityId: updatedTask.entityId,
+        title: updatedTask.title,
+        status: updatedTask.status,
+        updatedAt: updatedTask.updatedAt,
+      },
+    };
+  }
+
+  /**
+   * Delete task
+   */
+  private async deleteTask(
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    if (!config.taskId) {
+      return {
+        success: false,
+        error: 'Task ID is required for delete operation',
+      };
+    }
+
+    const result = await this.taskRepository.delete({
+      entityId: config.taskId,
+    });
+
+    if (result.affected === 0) {
+      return {
+        success: false,
+        error: `Task not found: ${config.taskId}`,
+      };
+    }
+
+    return {
+      success: true,
+      result: {
+        deleted: true,
+        taskId: config.taskId,
+      },
+    };
+  }
+
+  /**
+   * Get single task
+   */
+  private async getTask(
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    if (!config.taskId) {
+      return {
+        success: false,
+        error: 'Task ID is required for get operation',
+      };
+    }
+
+    const task = await this.taskRepository.findOne({
+      where: { entityId: config.taskId },
+    });
+
+    if (!task) {
+      return {
+        success: false,
+        error: `Task not found: ${config.taskId}`,
+      };
+    }
+
+    return {
+      success: true,
+      result: task,
+    };
+  }
+
+  /**
+   * List tasks with filters
+   */
+  private async listTasks(
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    const filters = config.filters || {};
+    const limit = config.limit || 50;
+    const offset = config.offset || 0;
+
+    const queryBuilder = this.taskRepository.createQueryBuilder('task');
+
+    // Apply filters dynamically
+    if (filters.status) {
+      queryBuilder.andWhere('task.status IN (:...statuses)', {
+        statuses: filters.status,
+      });
+    }
+
+    if (filters.entityType) {
+      queryBuilder.andWhere('task.entityType = :entityType', {
+        entityType: filters.entityType,
+      });
+    }
+
+    if (filters.dueDateFrom) {
+      queryBuilder.andWhere('task.dueDate >= :dueDateFrom', {
+        dueDateFrom: filters.dueDateFrom,
+      });
+    }
+
+    if (filters.dueDateTo) {
+      queryBuilder.andWhere('task.dueDate <= :dueDateTo', {
+        dueDateTo: filters.dueDateTo,
+      });
+    }
+
+    const tasks = await queryBuilder
+      .orderBy('task.createdAt', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return {
+      success: true,
+      result: {
+        tasks,
+        count: tasks.length,
+        limit,
+        offset,
+      },
+    };
+  }
+
+  /**
+   * Execute communication actions (email, SMS, etc.)
+   */
+  private async executeCommunicationAction(
+    action: WorkflowActionRegistryEntity,
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    this.logger.log(`Communication action: ${action.name}`, { config });
+
+    // TODO: Implement actual communication services
+    return {
+      success: true,
+      result: {
+        action: action.name,
+        type: 'communication',
+        recipient: config.to || config.phoneNumber,
+        message: config.message || config.body,
+        sent: true,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Execute database actions
+   */
+  private async executeDatabaseAction(
+    action: WorkflowActionRegistryEntity,
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    this.logger.log(`Database action: ${action.name}`, { config });
+
+    // TODO: Implement database operations
+    return {
+      success: true,
+      result: {
+        action: action.name,
+        type: 'database',
+        executed: true,
+        config,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Execute external API calls
+   */
+  private async executeExternalApi(
+    action: WorkflowActionRegistryEntity,
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    this.logger.log(`External API action: ${action.name}`, { config });
+
+    // TODO: Implement external API calls with authentication
+    return {
+      success: true,
+      result: {
+        action: action.name,
+        type: 'external_api',
+        executed: true,
+        config,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Execute conditional logic
+   */
+  private async executeConditional(
+    action: WorkflowActionRegistryEntity,
+    config: any,
+    context: WorkflowContext
+  ): Promise<ExecutionResult> {
+    this.logger.log(`Conditional action: ${action.name}`, { config });
+
+    // TODO: Implement conditional logic
+    return {
+      success: true,
+      result: {
+        action: action.name,
+        type: 'conditional',
+        conditionMet: true,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Execute generic action (fallback)
    */
   private async executeGenericAction(
     action: WorkflowActionRegistryEntity,
@@ -479,15 +448,47 @@ export class WorkflowActionExecutor {
   ): Promise<ExecutionResult> {
     this.logger.log(`Generic action executed: ${action.name}`, { config });
 
-    // TODO: Implement generic action execution based on action schema
     return {
       success: true,
       result: {
         action: action.name,
+        category: action.category,
+        executionType: action.execution_type,
         executed: true,
         config,
         timestamp: new Date().toISOString(),
       },
     };
+  }
+
+  /**
+   * Extract data from trigger context
+   */
+  private extractFromContext(field: string, context: WorkflowContext): any {
+    // Try to extract from trigger data
+    if (context.triggerData) {
+      // For database changes, look in 'after' data first, then 'before'
+      if (context.triggerData.after && context.triggerData.after[field]) {
+        return context.triggerData.after[field];
+      }
+      if (context.triggerData.before && context.triggerData.before[field]) {
+        return context.triggerData.before[field];
+      }
+      // For other trigger types, look in data
+      if (context.triggerData.data && context.triggerData.data[field]) {
+        return context.triggerData.data[field];
+      }
+      // Direct field access
+      if (context.triggerData[field]) {
+        return context.triggerData[field];
+      }
+    }
+
+    // Try to extract from variables
+    if (context.variables && context.variables[field]) {
+      return context.variables[field];
+    }
+
+    return undefined;
   }
 }

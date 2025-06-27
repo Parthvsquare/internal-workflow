@@ -17,6 +17,7 @@ import { DailyWorkflowMetricsEntity } from './entity/workflow/daily.metrics';
 import { ExecutionLogEntity } from './entity/workflow/execution.log';
 import { WorkflowRunEntity } from './entity/workflow/run';
 import { StepRunEntity } from './entity/workflow/step.run';
+import { WorkflowSubscriptionEntity } from './entity/workflow/workflow-subscription.entity';
 import { TaskEntity } from './entity';
 
 export const ENTITY = [
@@ -35,6 +36,7 @@ export const ENTITY = [
   ExecutionLogEntity,
   WorkflowRunEntity,
   StepRunEntity,
+  WorkflowSubscriptionEntity,
   TaskEntity,
 ];
 

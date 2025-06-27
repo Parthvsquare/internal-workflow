@@ -34,6 +34,9 @@ export class WorkflowTriggerRegistryEntity {
   @Column({ type: 'int', default: 1 })
   version!: number;
 
+  @Column({ type: 'boolean', default: true })
+  is_active!: boolean;
+
   @Column({ type: 'jsonb', default: {} })
   properties_schema?: Record<string, any>;
 
@@ -48,9 +51,6 @@ export class WorkflowTriggerRegistryEntity {
 
   @Column({ type: 'jsonb', default: {} })
   available_variables?: Record<string, any>;
-
-  @Column({ type: 'boolean', default: true })
-  is_active!: boolean;
 
   @CreateDateColumn()
   created_at!: Date;

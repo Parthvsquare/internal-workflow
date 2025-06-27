@@ -511,4 +511,43 @@ export class WorkflowRegistryController {
       ],
     };
   }
+
+  @Post('trigger/:triggerKey')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Process trigger event' })
+  @ApiParam({ name: 'triggerKey', description: 'Trigger key to process' })
+  @ApiBody({
+    description: 'Trigger event data',
+    schema: {
+      type: 'object',
+      properties: {
+        eventData: { type: 'object' },
+        context: { type: 'object' },
+      },
+    },
+  })
+  @ApiOkResponse({ description: 'Trigger processed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid trigger data' })
+  async processTrigger(
+    @Param('triggerKey') triggerKey: string,
+    @Body() body: { eventData: any; context?: any }
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      await this.workflowEngine.processTriggerEvent(
+        triggerKey,
+        body.eventData,
+        body.context || {}
+      );
+
+      return {
+        success: true,
+        message: `Trigger ${triggerKey} processed successfully`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
 }
