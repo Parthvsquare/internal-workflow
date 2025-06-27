@@ -17,6 +17,10 @@ import { ExecutionLogEntity } from './entity/workflow/execution.log';
 import { WorkflowRunEntity } from './entity/workflow/run';
 import { StepRunEntity } from './entity/workflow/step.run';
 import { WorkflowSubscriptionEntity } from './entity/workflow/workflow-subscription.entity';
+import { WorkflowVariableEntity } from './entity/workflow/workflow-variable.entity';
+import { ExecutionMetricsEntity } from './entity/workflow/execution-metrics.entity';
+import { WebhookEndpointEntity } from './entity/workflow/webhook-endpoint.entity';
+import { ScheduleTriggerEntity } from './entity/workflow/schedule-trigger.entity';
 import { TaskEntity } from './entity';
 
 export const ENTITY = [
@@ -34,6 +38,10 @@ export const ENTITY = [
   WorkflowRunEntity,
   StepRunEntity,
   WorkflowSubscriptionEntity,
+  WorkflowVariableEntity,
+  ExecutionMetricsEntity,
+  WebhookEndpointEntity,
+  ScheduleTriggerEntity,
   TaskEntity,
 ];
 

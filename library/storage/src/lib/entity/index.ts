@@ -11,4 +11,8 @@ export * from './workflow/daily.metrics';
 export * from './workflow/execution.log';
 export * from './workflow/run';
 export * from './workflow/step.run';
+export * from './workflow/webhook-endpoint.entity';
+export * from './workflow/workflow-variable.entity';
+export * from './workflow/schedule-trigger.entity';
+export * from './workflow/execution-metrics.entity';
 export * from './task';

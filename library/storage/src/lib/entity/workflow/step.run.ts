@@ -8,17 +8,34 @@
 //                  (status IN ('PENDING','SUCCESS','FAILED','SKIPPED')),
 //   started_at       TIMESTAMPTZ,
 //   ended_at         TIMESTAMPTZ,
+//   execution_time   INT,                          -- Duration in milliseconds
+//   result_data      JSONB,                        -- Step execution result
+//   error_message    TEXT,                         -- Error message if failed
+//   error_stack      TEXT,                         -- Full error stack trace
+//   retry_count      INT DEFAULT 0,                -- Number of retries
+//   max_retries      INT DEFAULT 0,                -- Max allowed retries
+//   input_data       JSONB,                        -- Input data for debugging
+//   output_data      JSONB,                        -- Output data for next steps
 //   idempotency_key  TEXT,
 //   PRIMARY KEY (run_id, step_id)
 // );
 
 // CREATE INDEX idx_step_status ON step_run (status);
+// CREATE INDEX idx_step_execution_time ON step_run (execution_time);
 
-import { Column, Entity, PrimaryColumn } from 'typeorm';
-import { Index } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryColumn,
+  Index,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('step_run')
 @Index('idx_step_status', ['status'])
+@Index('idx_step_execution_time', ['execution_time'])
+@Index('idx_step_run_started_at', ['started_at'])
 export class StepRunEntity {
   @PrimaryColumn({ type: 'uuid', nullable: false })
   run_id!: string;
@@ -29,12 +46,42 @@ export class StepRunEntity {
   @Column({ type: 'text', nullable: true })
   status!: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   started_at?: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   ended_at?: Date;
+
+  @Column({ type: 'int', nullable: true })
+  execution_time?: number; // Duration in milliseconds
+
+  @Column({ type: 'jsonb', nullable: true })
+  result_data?: Record<string, any>; // Step execution result
+
+  @Column({ type: 'text', nullable: true })
+  error_message?: string; // Error message if failed
+
+  @Column({ type: 'text', nullable: true })
+  error_stack?: string; // Full error stack trace
+
+  @Column({ type: 'int', default: 0 })
+  retry_count!: number; // Number of retries attempted
+
+  @Column({ type: 'int', default: 0 })
+  max_retries!: number; // Max allowed retries for this step
+
+  @Column({ type: 'jsonb', nullable: true })
+  input_data?: Record<string, any>; // Input data for debugging
+
+  @Column({ type: 'jsonb', nullable: true })
+  output_data?: Record<string, any>; // Output data for next steps
 
   @Column({ type: 'text', nullable: true })
   idempotency_key?: string;
+
+  @CreateDateColumn()
+  created_at!: Date;
+
+  @UpdateDateColumn()
+  updated_at!: Date;
 }

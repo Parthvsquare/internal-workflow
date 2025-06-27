@@ -10,6 +10,10 @@ import {
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
+  WorkflowVariableEntity,
+  ExecutionMetricsEntity,
+  WebhookEndpointEntity,
+  ScheduleTriggerEntity,
 } from '@internal-workflow/storage';
 import {
   FilterCondition,
@@ -25,6 +29,8 @@ export interface WorkflowContext {
   userId?: string;
   tenantId?: string;
   triggerEventId?: string;
+  triggerType?: 'webhook' | 'schedule' | 'manual' | 'database' | 'api';
+  executionMode?: 'sync' | 'async' | 'test';
 }
 
 export interface ExecutionResult {
@@ -32,6 +38,16 @@ export interface ExecutionResult {
   result?: any;
   error?: string;
   results?: any[];
+  executionTime?: number;
+  stepRunId?: string;
+}
+
+export interface StepExecutionContext {
+  step: WorkflowStepEntity;
+  context: WorkflowContext;
+  runId: string;
+  inputData?: any;
+  retryCount?: number;
 }
 
 @Injectable()
@@ -55,6 +71,14 @@ export class WorkflowEngineService {
     private readonly triggerRegistry: Repository<WorkflowTriggerRegistryEntity>,
     @InjectRepository(WorkflowSubscriptionEntity)
     private readonly subscriptionRepository: Repository<WorkflowSubscriptionEntity>,
+    @InjectRepository(WorkflowVariableEntity)
+    private readonly workflowVariableRepository: Repository<WorkflowVariableEntity>,
+    @InjectRepository(ExecutionMetricsEntity)
+    private readonly executionMetricsRepository: Repository<ExecutionMetricsEntity>,
+    @InjectRepository(WebhookEndpointEntity)
+    private readonly webhookEndpointRepository: Repository<WebhookEndpointEntity>,
+    @InjectRepository(ScheduleTriggerEntity)
+    private readonly scheduleTriggerRepository: Repository<ScheduleTriggerEntity>,
     private readonly filterService: WorkflowFilterService,
     private readonly actionExecutor: WorkflowActionExecutor
   ) {}
@@ -66,6 +90,7 @@ export class WorkflowEngineService {
     workflowId: string,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
+    const startTime = Date.now();
     this.logger.log(`Starting workflow execution: ${workflowId}`);
 
     try {
@@ -82,8 +107,17 @@ export class WorkflowEngineService {
         };
       }
 
-      // Create workflow run
+      // Load workflow variables and merge with context
+      const workflowVariables = await this.loadWorkflowVariables(workflowId);
+      context.variables = {
+        ...workflowVariables,
+        ...context.variables,
+        trigger: context.triggerData,
+      };
+
+      // Create workflow run with enhanced tracking
       const run = await this.createWorkflowRun(workflow, context);
+      context.runId = run.id;
 
       // Get workflow steps
       const steps = await this.stepRepository.find({
@@ -91,23 +125,49 @@ export class WorkflowEngineService {
         order: { name: 'ASC' },
       });
 
-      // Execute steps
+      // Update run with step count
+      await this.runRepository.update(run.id, {
+        total_steps: steps.length,
+        status: 'RUNNING',
+      });
+
+      // Execute steps with enhanced tracking
       const stepResults = await this.executeSteps(steps, run, context);
 
-      // Update run status
-      await this.updateRunStatus(run.id, stepResults);
+      // Update run status with detailed metrics
+      await this.updateRunStatus(run.id, stepResults, startTime);
 
-      this.logger.log(`Workflow execution completed: ${workflowId}`);
+      // Create execution metrics
+      await this.createExecutionMetrics(run, stepResults, startTime);
+
+      const executionTime = Date.now() - startTime;
+      this.logger.log(
+        `Workflow execution completed: ${workflowId} in ${executionTime}ms`
+      );
 
       return {
         success: stepResults.success,
         result: { runId: run.id, stepResults: stepResults.results },
+        executionTime,
       };
     } catch (error) {
+      const executionTime = Date.now() - startTime;
       this.logger.error(`Workflow execution failed: ${workflowId}`, error);
+
+      // Update run status to failed if we have a run ID
+      if (context.runId) {
+        await this.runRepository.update(context.runId, {
+          status: 'FAILED',
+          ended_at: new Date(),
+          execution_time: executionTime,
+          fail_reason: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
+        executionTime,
       };
     }
   }
@@ -133,13 +193,18 @@ export class WorkflowEngineService {
         return;
       }
 
+      // Determine trigger type from event source
+      const triggerType = this.determineTriggerType(trigger, eventData);
+
+      // Create trigger summary for quick access
+      const triggerSummary = this.createTriggerSummary(eventData, triggerType);
+
       // Find workflows subscribed to this trigger
       const workflowSubscriptions =
         await this.findWorkflowSubscriptionsByTrigger(triggerKey);
 
-      console.log(
-        '===> ~ WorkflowEngineService ~ workflowSubscriptions:',
-        workflowSubscriptions
+      this.logger.debug(
+        `Found ${workflowSubscriptions.length} subscriptions for trigger: ${triggerKey}`
       );
 
       for (const subscription of workflowSubscriptions) {
@@ -153,11 +218,6 @@ export class WorkflowEngineService {
           eventData
         );
 
-        console.log(
-          '===> ~ WorkflowEngineService ~ shouldExecute:',
-          shouldExecute
-        );
-
         if (shouldExecute) {
           const workflowContext: WorkflowContext = {
             triggerData: eventData,
@@ -165,8 +225,9 @@ export class WorkflowEngineService {
             workflowId: subscription.workflow.id,
             userId: context.userId,
             tenantId: context.tenantId,
-            // Pass the trigger_event_id from context
             triggerEventId: context.trigger_event_id,
+            triggerType,
+            executionMode: context.executionMode || 'async',
           };
 
           // Execute workflow asynchronously
@@ -187,26 +248,42 @@ export class WorkflowEngineService {
   }
 
   /**
-   * Create a new workflow run record
+   * Create a new workflow run record with enhanced tracking
    */
   private async createWorkflowRun(
     workflow: WorkflowDefinitionEntity,
     context: WorkflowContext
   ): Promise<WorkflowRunEntity> {
+    // Create trigger summary if we have trigger data
+    const triggerSummary = context.triggerData
+      ? this.createTriggerSummary(context.triggerData, context.triggerType)
+      : undefined;
+
     const run = this.runRepository.create({
       workflow_id: workflow.id,
       version_id: workflow.latestVersion!.id,
       trigger_event_id:
         context.triggerEventId || context.triggerData?.eventId || 'manual',
+      trigger_type: context.triggerType || 'manual',
+      trigger_summary: triggerSummary,
+      execution_mode: context.executionMode || 'async',
       status: 'PENDING',
       started_at: new Date(),
+      created_by: context.userId,
+      // Initialize counters
+      total_steps: 0,
+      completed_steps: 0,
+      failed_steps: 0,
+      skipped_steps: 0,
+      retry_count: 0,
+      max_retries: 3, // Default max retries
     });
 
     return await this.runRepository.save(run);
   }
 
   /**
-   * Execute workflow steps
+   * Execute workflow steps with enhanced tracking
    */
   private async executeSteps(
     steps: WorkflowStepEntity[],
@@ -215,25 +292,58 @@ export class WorkflowEngineService {
   ): Promise<{ success: boolean; results: any[] }> {
     const results: any[] = [];
     let overallSuccess = true;
+    let completedSteps = 0;
+    let failedSteps = 0;
+    const skippedSteps = 0;
 
     for (const step of steps) {
       try {
-        const stepResult = await this.executeStep(step, context);
-        results.push(stepResult);
+        // Create step run record
+        const stepRun = await this.createStepRun(step, run.id, 'PENDING');
 
-        if (!stepResult.success) {
+        const stepResult = await this.executeStepWithTracking({
+          step,
+          context,
+          runId: run.id,
+          retryCount: 0,
+        });
+
+        // Update step run record
+        await this.updateStepRun(stepRun, stepResult);
+
+        results.push({
+          ...stepResult,
+          stepRunId: stepRun.run_id + '_' + stepRun.step_id,
+        });
+
+        if (stepResult.success) {
+          completedSteps++;
+        } else {
+          failedSteps++;
           overallSuccess = false;
           break;
         }
       } catch (error) {
+        failedSteps++;
         overallSuccess = false;
-        results.push({
+
+        const errorResult = {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-        });
+          executionTime: 0,
+        };
+
+        results.push(errorResult);
         break;
       }
     }
+
+    // Update workflow run counters
+    await this.runRepository.update(run.id, {
+      completed_steps: completedSteps,
+      failed_steps: failedSteps,
+      skipped_steps: skippedSteps,
+    });
 
     return { success: overallSuccess, results };
   }
@@ -357,17 +467,21 @@ export class WorkflowEngineService {
    */
   private async updateRunStatus(
     runId: string,
-    stepResults: { success: boolean; results: any[] }
+    stepResults: { success: boolean; results: any[] },
+    startTime: number
   ): Promise<void> {
     const status = stepResults.success ? 'SUCCESS' : 'FAILED';
     const failReason = stepResults.success
       ? undefined
       : 'One or more steps failed';
 
+    const executionTime = Date.now() - startTime;
+
     await this.runRepository.update(runId, {
       status,
       ended_at: new Date(),
       fail_reason: failReason,
+      execution_time: executionTime,
     });
   }
 
@@ -409,5 +523,200 @@ export class WorkflowEngineService {
     }
 
     return true;
+  }
+
+  /**
+   * Load workflow-specific variables
+   */
+  private async loadWorkflowVariables(
+    workflowId: string
+  ): Promise<Record<string, any>> {
+    const variables = await this.workflowVariableRepository.find({
+      where: { workflow_id: workflowId },
+    });
+
+    const variableMap: Record<string, any> = {};
+    for (const variable of variables) {
+      // Use default value if current value is null/undefined
+      variableMap[variable.key] = variable.value ?? variable.default_value;
+    }
+
+    return variableMap;
+  }
+
+  /**
+   * Create a step run record for tracking
+   */
+  private async createStepRun(
+    step: WorkflowStepEntity,
+    runId: string,
+    status: string,
+    inputData?: any
+  ): Promise<StepRunEntity> {
+    const stepRun = this.stepRunRepository.create({
+      run_id: runId,
+      step_id: step.id,
+      status,
+      started_at: new Date(),
+      input_data: inputData,
+      retry_count: 0,
+      max_retries: 3, // Default max retries per step
+    });
+
+    return await this.stepRunRepository.save(stepRun);
+  }
+
+  /**
+   * Execute a step with enhanced tracking
+   */
+  private async executeStepWithTracking(
+    stepContext: StepExecutionContext
+  ): Promise<ExecutionResult> {
+    const startTime = Date.now();
+
+    try {
+      const result = await this.executeStep(
+        stepContext.step,
+        stepContext.context
+      );
+      const executionTime = Date.now() - startTime;
+
+      return {
+        ...result,
+        executionTime,
+      };
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        executionTime,
+      };
+    }
+  }
+
+  /**
+   * Update step run record with execution results
+   */
+  private async updateStepRun(
+    stepRun: StepRunEntity,
+    result: ExecutionResult
+  ): Promise<void> {
+    const updateData: Partial<StepRunEntity> = {
+      status: result.success ? 'SUCCESS' : 'FAILED',
+      ended_at: new Date(),
+      execution_time: result.executionTime || 0,
+      result_data: result.result,
+      output_data: result.result,
+    };
+
+    if (!result.success && result.error) {
+      updateData.error_message = result.error;
+      // Could add error stack if available
+    }
+
+    await this.stepRunRepository.update(
+      { run_id: stepRun.run_id, step_id: stepRun.step_id },
+      updateData
+    );
+  }
+
+  /**
+   * Create detailed execution metrics for analytics
+   */
+  private async createExecutionMetrics(
+    run: WorkflowRunEntity,
+    stepResults: { success: boolean; results: any[] },
+    startTime: number
+  ): Promise<void> {
+    try {
+      const executionTime = Date.now() - startTime;
+      const successfulSteps = stepResults.results.filter(
+        (r) => r.success
+      ).length;
+      const successRate =
+        stepResults.results.length > 0
+          ? (successfulSteps / stepResults.results.length) * 100
+          : 0;
+
+      // Count errors and network calls from step results
+      let errorCount = 0;
+      let networkCalls = 0;
+      let networkTime = 0;
+
+      stepResults.results.forEach((result) => {
+        if (result.error) errorCount++;
+        if (result.networkCalls) networkCalls += result.networkCalls;
+        if (result.networkTime) networkTime += result.networkTime;
+      });
+
+      const metrics = this.executionMetricsRepository.create({
+        run_id: run.id,
+        workflow_id: run.workflow_id,
+        version_id: run.version_id,
+        trigger_type: run.trigger_type,
+        execution_time: executionTime,
+        step_count: stepResults.results.length,
+        success_rate: successRate,
+        network_calls: networkCalls,
+        network_time: networkTime,
+        error_count: errorCount,
+        warning_count: 0, // Could be enhanced to track warnings
+      });
+
+      await this.executionMetricsRepository.save(metrics);
+    } catch (error) {
+      this.logger.error('Failed to create execution metrics:', error);
+      // Don't fail the workflow if metrics creation fails
+    }
+  }
+
+  private determineTriggerType(
+    trigger: WorkflowTriggerRegistryEntity,
+    eventData: any
+  ): WorkflowContext['triggerType'] {
+    // Determine trigger type based on trigger's event_source
+    if (trigger.event_source === 'webhook') return 'webhook';
+    if (trigger.event_source === 'schedule') return 'schedule';
+    if (trigger.event_source === 'debezium') return 'database';
+    if (eventData?.manual) return 'manual';
+    return 'api';
+  }
+
+  private createTriggerSummary(
+    eventData: any,
+    triggerType: WorkflowContext['triggerType']
+  ): Record<string, any> {
+    // Create a summary object for quick access and UI display
+    const summary: Record<string, any> = {
+      type: triggerType,
+      timestamp: new Date().toISOString(),
+    };
+
+    switch (triggerType) {
+      case 'database':
+        summary.table = eventData?.table;
+        summary.operation = eventData?.operation;
+        summary.recordId = eventData?.after?.id || eventData?.before?.id;
+        break;
+      case 'webhook':
+        summary.method = eventData?.method || 'POST';
+        summary.path = eventData?.path;
+        summary.source = eventData?.headers?.['user-agent'] || 'unknown';
+        break;
+      case 'schedule':
+        summary.scheduleName = eventData?.scheduleName;
+        summary.cronExpression = eventData?.cronExpression;
+        break;
+      case 'manual':
+        summary.userId = eventData?.userId;
+        summary.reason = eventData?.reason || 'Manual trigger';
+        break;
+      default:
+        summary.source = 'api';
+    }
+
+    return summary;
   }
 }
