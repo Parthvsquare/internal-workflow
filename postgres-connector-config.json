@@ -8,7 +8,7 @@
     "database.password": "postgres",
     "database.dbname": "mydb",
     "database.server.name": "dbserver1",
-    "table.include.list": "public.workflow_trigger_registry,public.workflow_action_registry",
+    "table.include.list": "public.workflow_trigger_registry,public.workflow_action_registry,public.lead_sources",
     "plugin.name": "pgoutput",
     "publication.autocreate.mode": "filtered",
     "slot.name": "debezium_slot",
@@ -24,6 +24,3 @@
     "transforms.unwrap.add.fields": "op,ts_ms,source.ts_ms"
   }
 }
-
-// to add connector to debezium connect
-// curl -X POST -H "Content-Type: application/json" --data @postgres-connector-config.json http://localhost:8083/connectors

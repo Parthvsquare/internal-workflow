@@ -48,7 +48,7 @@ export enum FilterCombinator {
   OR = 'OR',
 }
 
-export class FilterConditionDto {
+export class WorkflowFilterConditionDto {
   @ApiProperty({
     description: 'Variable path to filter on',
     example: '{{variable.lead_status}}',
@@ -89,14 +89,12 @@ export class FilterGroupDto {
   combinator!: FilterCombinator;
 
   @ApiProperty({
-    type: [FilterConditionDto],
+    type: [WorkflowFilterConditionDto],
     description: 'Array of filter conditions',
   })
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => FilterConditionDto)
   @ArrayMinSize(1)
-  conditions!: FilterConditionDto[];
+  conditions!: WorkflowFilterConditionDto[];
 }
 
 export class StepConfigurationDto {

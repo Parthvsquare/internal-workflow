@@ -26,7 +26,7 @@ import {
 } from './dto/workflow.dto';
 
 @ApiTags('Workflow Generation')
-@Controller('api/workflows')
+@Controller('/workflows')
 export class WorkflowGenerationController {
   constructor(private readonly workflowService: WorkflowGenerationService) {}
 
