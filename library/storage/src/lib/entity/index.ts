@@ -11,3 +11,4 @@ export * from './workflow/daily.metrics';
 export * from './workflow/execution.log';
 export * from './workflow/run';
 export * from './workflow/step.run';
+export * from './task';

@@ -4,13 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../../library/queue"
+      "path": "../storage"
     },
     {
-      "path": "../../library/storage"
-    },
-    {
-      "path": "./tsconfig.app.json"
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

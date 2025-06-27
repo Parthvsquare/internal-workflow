@@ -25,6 +25,8 @@ import {
   ApiNoContentResponse,
 } from '@nestjs/swagger';
 import { WorkflowRegistryService } from './workflow-registry.service';
+import { WorkflowEngineService } from './services/workflow-engine.service';
+// Kafka consumer moved to worker-service
 import {
   CreateActionRegistryDto,
   UpdateActionRegistryDto,
@@ -43,7 +45,8 @@ import {
 @Controller('workflow-registry')
 export class WorkflowRegistryController {
   constructor(
-    private readonly workflowRegistryService: WorkflowRegistryService
+    private readonly workflowRegistryService: WorkflowRegistryService,
+    private readonly workflowEngine: WorkflowEngineService
   ) {}
 
   // Action Registry Endpoints

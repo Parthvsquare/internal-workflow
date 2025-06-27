@@ -7,13 +7,19 @@
       "path": "./apps/web"
     },
     {
-      "path": "./apps/api-e2e"
-    },
-    {
       "path": "./apps/api"
     },
     {
       "path": "./library/storage"
+    },
+    {
+      "path": "./apps/scheduler-service"
+    },
+    {
+      "path": "./library/queue"
+    },
+    {
+      "path": "./apps/worker-service"
     }
   ]
 }
