@@ -23,9 +23,6 @@
     },
     {
       "path": "./library/workflow-engine"
-    },
-    {
-      "path": "./library/wk-engine"
     }
   ]
 }

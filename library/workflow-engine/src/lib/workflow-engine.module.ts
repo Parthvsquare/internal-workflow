@@ -9,6 +9,7 @@ import {
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
   WorkflowVariableEntity,
+  TaskEntity,
 } from '@internal-workflow/storage';
 import { WorkflowEngineService } from './services/workflow-engine.service';
 import { WorkflowFilterService } from './services/workflow-filter.service';
@@ -25,6 +26,7 @@ import { WorkflowActionExecutor } from './services/workflow-action.executor';
       WorkflowTriggerRegistryEntity,
       WorkflowSubscriptionEntity,
       WorkflowVariableEntity,
+      TaskEntity,
     ]),
   ],
   providers: [
