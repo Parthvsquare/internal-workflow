@@ -1,82 +1,197 @@
-# InternalWorkflow
+Let me help you understand the database storage strategy and how different types of data are saved across the workflow system.
+Search files...
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+Based on the codebase analysis, here's a comprehensive breakdown of **which database saves what and how** in your workflow system:
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+## 🗄️ **Database Configuration**
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+**Single PostgreSQL Database** shared across all services:
 
-## Finish your CI setup
+- **API Service** (main application)
+- **Worker Service** (processes workflows)
+- **Scheduler Service** (handles webhooks/scheduling)
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/x9ZuTtzL1b)
-
-
-## Run tasks
-
-To run the dev server for your app, use:
-
-```sh
-npx nx serve internal-workflow
+```typescript
+// Database config (same across all services)
+{
+  type: 'postgres',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+  username: process.env.POSTGRES_USER || 'postgres',
+  password: process.env.POSTGRES_PASSWORD || 'postgres',
+  database: process.env.POSTGRES_DB || 'mydb',
+  synchronize: true,
+  entities: [...ENTITY] // 17 total entities
+}
 ```
 
-To create a production bundle:
+## 📊 **Data Categories & Storage Mapping**
 
-```sh
-npx nx build internal-workflow
+Ran tool
+
+## 📝 **Detailed Storage Breakdown**
+
+### **1. DESIGN TIME DATA** (User Configuration)
+
+| **Table**               | **What It Stores**                                      | **When Saved**                      | **Saved By**          |
+| ----------------------- | ------------------------------------------------------- | ----------------------------------- | --------------------- |
+| `workflow_definition`   | Workflow metadata (name, description, category, tags)   | User creates workflow               | **API Service**       |
+| `workflow_version`      | Immutable workflow versions + S3 storage keys           | User saves/publishes workflow       | **API Service**       |
+| `workflow_step`         | Individual workflow steps (actions, conditions, delays) | User adds steps to workflow         | **API Service**       |
+| `workflow_edge`         | Connections between steps (graph structure)             | User connects steps                 | **API Service**       |
+| `workflow_variable`     | User-defined variables (encrypted if needed)            | User configures variables           | **API Service**       |
+| `workflow_subscription` | Links workflows to triggers + filter conditions         | User subscribes workflow to trigger | **API Service**       |
+| `webhook_endpoint`      | Webhook URL configurations                              | User enables webhook triggers       | **Scheduler Service** |
+| `schedule_trigger`      | Cron job configurations                                 | User sets up scheduled triggers     | **Scheduler Service** |
+
+### **2. REGISTRY DATA** (Available Components)
+
+| **Table**                   | **What It Stores**                                      | **When Saved**                     | **Saved By**                       |
+| --------------------------- | ------------------------------------------------------- | ---------------------------------- | ---------------------------------- |
+| `workflow_action_registry`  | Available actions (SMS, email, task creation, etc.)     | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `workflow_trigger_registry` | Available triggers (database, webhook, schedule)        | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `credential_type`           | Authentication type definitions (OAuth2, API key, etc.) | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `user_credentials`          | User's encrypted authentication data                    | User adds credentials              | **API Service**                    |
+
+### **3. RUNTIME DATA** (Execution Tracking)
+
+| **Table**      | **What It Stores**                                   | **When Saved**                | **Saved By**       |
+| -------------- | ---------------------------------------------------- | ----------------------------- | ------------------ |
+| `workflow_run` | Overall execution tracking (status, metrics, timing) | Workflow execution starts     | **Worker Service** |
+| `step_run`     | Individual step execution details (results, errors)  | Each step executes            | **Worker Service** |
+| `tasks`        | Generated tasks from workflow actions                | Task creation action executes | **Worker Service** |
+
+### **4. CONVENIENCE VIEW**
+
+| **View**               | **What It Provides**               | **Purpose**                                |
+| ---------------------- | ---------------------------------- | ------------------------------------------ |
+| `workflow_latest_json` | Latest workflow definition as JSON | Quick access to current workflow structure |
+
+## 🔄 **Data Flow During Workflow Execution**
+
+Read file: library/workflow-engine/src/lib/services/workflow-engine.service.ts
+
+## 💾 **Specific Data Storage Flows**
+
+### **A) Workflow Creation Flow (API Service)**
+
+```typescript
+// 1. User creates workflow → workflow_definition
+const workflow = await workflowRepository.save({
+  name: 'Lead Processing',
+  description: 'Process new leads',
+  category: 'automation',
+  is_active: true,
+});
+
+// 2. User saves version → workflow_version
+const version = await versionRepository.save({
+  workflow_id: workflow.id,
+  version_num: 1,
+  s3_key: `s3://workflows/${workflow.id}/v1.json`,
+});
+
+// 3. User adds steps → workflow_step
+const step = await stepRepository.save({
+  version_id: version.id,
+  kind: 'action',
+  action_key: 'task_management',
+  cfg: { operation: 'create', title: 'Follow up lead' },
+});
+
+// 4. User connects steps → workflow_edge
+await edgeRepository.save({
+  from_step_id: step1.id,
+  to_step_id: step2.id,
+  branch_key: 'default',
+});
+
+// 5. User subscribes to trigger → workflow_subscription
+await subscriptionRepository.save({
+  workflow_id: workflow.id,
+  trigger_key: 'lead_sources_db_change',
+  filter_conditions: {
+    /* filter logic */
+  },
+});
 ```
 
-To see all available targets to run for a project, run:
+### **B) Workflow Execution Flow (Worker Service)**
 
-```sh
-npx nx show project internal-workflow
+```typescript
+// 1. Event arrives → Find subscriptions
+const subscriptions = await subscriptionRepository.find({
+  where: { trigger_key: 'lead_sources_db_change' },
+});
+
+// 2. Create workflow run → workflow_run
+const workflowRun = await runRepository.save({
+  workflow_id: workflow.id,
+  version_id: version.id,
+  trigger_event_id: 'event-123',
+  trigger_type: 'database',
+  status: 'PENDING',
+  context_data: eventData,
+});
+
+// 3. Execute each step → step_run (not shown in the code above, but this is where it would happen)
+for (const step of steps) {
+  const stepRun = await stepRunRepository.save({
+    run_id: workflowRun.id,
+    step_id: step.id,
+    status: 'PENDING',
+    started_at: new Date(),
+  });
+
+  // Execute step logic...
+
+  // Update step_run with results
+  await stepRunRepository.update(
+    { run_id: workflowRun.id, step_id: step.id },
+    {
+      status: 'SUCCESS',
+      ended_at: new Date(),
+      result_data: stepResult,
+      execution_time: duration,
+    }
+  );
+}
+
+// 4. If task creation action → tasks
+if (action_key === 'task_management') {
+  await taskRepository.save({
+    title: 'Follow up with lead',
+    description: 'Generated from workflow',
+    status: TaskStatus.PENDING,
+  });
+}
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 🔍 **Data Access Patterns**
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### **Read-Heavy Operations**
 
-## Add new projects
+- **Trigger Processing**: Read from `workflow_trigger_registry` → `workflow_subscription` → `workflow_definition`
+- **Workflow Execution**: Read from `workflow_definition` → `workflow_version` → `workflow_step` → `workflow_variable`
+- **Action Execution**: Read from `workflow_action_registry`
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+### **Write-Heavy Operations**
 
-Use the plugin's generator to create new projects.
+- **Runtime Tracking**: Write to `workflow_run` → `step_run`
+- **Task Generation**: Write to `tasks`
+- **Metrics**: Update `workflow_run` with execution metrics
 
-To generate a new application, use:
+### **Mixed Read/Write**
 
-```sh
-npx nx g @nx/react:app demo
-```
+- **User Configuration**: Read/Write `workflow_definition`, `workflow_step`, `workflow_variable`
+- **Credential Management**: Read/Write `user_credentials`
 
-To generate a new library, use:
+## 🏗️ **Service Responsibilities**
 
-```sh
-npx nx g @nx/react:lib mylib
-```
+| **Service**           | **Primary Role**                    | **Database Operations**          |
+| --------------------- | ----------------------------------- | -------------------------------- |
+| **API Service**       | User interface, workflow management | CREATE/UPDATE design-time data   |
+| **Worker Service**    | Workflow execution                  | CREATE/UPDATE runtime data       |
+| **Scheduler Service** | Webhooks, scheduling                | CREATE/UPDATE trigger management |
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This architecture ensures **data consistency** across services while allowing each service to focus on its specific responsibilities. All services share the same PostgreSQL database but operate on different subsets of the data based on their roles.

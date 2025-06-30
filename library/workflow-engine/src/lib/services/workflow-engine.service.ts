@@ -9,6 +9,7 @@ import {
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
   WorkflowVariableEntity,
+  StepRunEntity,
 } from '@internal-workflow/storage';
 import {
   WorkflowContext,
@@ -28,6 +29,8 @@ export class WorkflowEngineService {
     private readonly runRepository: Repository<WorkflowRunEntity>,
     @InjectRepository(WorkflowStepEntity)
     private readonly stepRepository: Repository<WorkflowStepEntity>,
+    @InjectRepository(StepRunEntity)
+    private readonly stepRunRepository: Repository<StepRunEntity>,
     @InjectRepository(WorkflowTriggerRegistryEntity)
     private readonly triggerRegistry: Repository<WorkflowTriggerRegistryEntity>,
     @InjectRepository(WorkflowSubscriptionEntity)
@@ -316,8 +319,37 @@ export class WorkflowEngineService {
     let allSuccessful = true;
 
     for (const step of steps) {
+      const stepStartTime = Date.now();
+
+      // Create step run record
+      const stepRun = await this.stepRunRepository.save({
+        run_id: context.runId!, // Assuming runId is added to context
+        step_id: step.id,
+        status: 'PENDING',
+        started_at: new Date(),
+        retry_count: 0,
+        max_retries: 3,
+        input_data: context.variables,
+      });
+
       try {
         const result = await this.executeStep(step, context);
+        const executionTime = Date.now() - stepStartTime;
+
+        // Update step run with success
+        await this.stepRunRepository.update(
+          { run_id: context.runId!, step_id: step.id },
+          {
+            status: result.success ? 'SUCCESS' : 'FAILED',
+            ended_at: new Date(),
+            execution_time: executionTime,
+            result_data: result.result,
+            output_data: result.result,
+            error_message: result.success ? undefined : result.error,
+            error_stack: result.success ? undefined : (result as any).stack,
+          }
+        );
+
         results.push(result);
 
         if (!result.success) {
@@ -325,7 +357,22 @@ export class WorkflowEngineService {
           // In a real implementation, you might want to stop here or continue based on step configuration
         }
       } catch (error) {
+        const executionTime = Date.now() - stepStartTime;
         this.logger.error(`Step execution failed: ${step.id}`, error);
+
+        // Update step run with error
+        await this.stepRunRepository.update(
+          { run_id: context.runId!, step_id: step.id },
+          {
+            status: 'FAILED',
+            ended_at: new Date(),
+            execution_time: executionTime,
+            error_message:
+              error instanceof Error ? error.message : 'Unknown error',
+            error_stack: error instanceof Error ? error.stack : undefined,
+          }
+        );
+
         results.push({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

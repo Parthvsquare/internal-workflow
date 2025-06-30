@@ -10,6 +10,7 @@ import {
   WorkflowSubscriptionEntity,
   WorkflowVariableEntity,
   TaskEntity,
+  StepRunEntity,
 } from '@internal-workflow/storage';
 import { WorkflowEngineService } from './services/workflow-engine.service';
 import { WorkflowFilterService } from './services/workflow-filter.service';
@@ -27,6 +28,7 @@ import { WorkflowActionExecutor } from './services/workflow-action.executor';
       WorkflowSubscriptionEntity,
       WorkflowVariableEntity,
       TaskEntity,
+      StepRunEntity,
     ]),
   ],
   providers: [

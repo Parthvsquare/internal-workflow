@@ -1,28 +1,3 @@
-/* ──────────────────────────────────────────────────────────────────── */
-/* 7.  Runtime: each executed step                                     */
-/* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE step_run (
-//   run_id           UUID REFERENCES workflow_run(id) ON DELETE CASCADE,
-//   step_id          UUID REFERENCES workflow_step(id),
-//   status           TEXT CHECK
-//                  (status IN ('PENDING','SUCCESS','FAILED','SKIPPED')),
-//   started_at       TIMESTAMPTZ,
-//   ended_at         TIMESTAMPTZ,
-//   execution_time   INT,                          -- Duration in milliseconds
-//   result_data      JSONB,                        -- Step execution result
-//   error_message    TEXT,                         -- Error message if failed
-//   error_stack      TEXT,                         -- Full error stack trace
-//   retry_count      INT DEFAULT 0,                -- Number of retries
-//   max_retries      INT DEFAULT 0,                -- Max allowed retries
-//   input_data       JSONB,                        -- Input data for debugging
-//   output_data      JSONB,                        -- Output data for next steps
-//   idempotency_key  TEXT,
-//   PRIMARY KEY (run_id, step_id)
-// );
-
-// CREATE INDEX idx_step_status ON step_run (status);
-// CREATE INDEX idx_step_execution_time ON step_run (execution_time);
-
 import {
   Column,
   Entity,
