@@ -18,6 +18,16 @@
 //   execution_time    INT,                         -- Total execution time in ms
 //   retry_count       INT DEFAULT 0,                -- Number of workflow retries
 //   max_retries       INT DEFAULT 3,                -- Max allowed retries
+//   -- Enhanced metrics (from ExecutionMetricsEntity)
+//   queue_time        INT,                          -- Time spent in queue before execution
+//   memory_usage      INT,                          -- Peak memory usage in MB
+//   cpu_time          INT,                          -- CPU time in ms
+//   network_calls     INT DEFAULT 0,                -- Number of external API calls
+//   network_time      INT DEFAULT 0,                -- Time spent on network calls
+//   cache_hits        INT DEFAULT 0,                -- Number of cache hits
+//   cache_misses      INT DEFAULT 0,                -- Number of cache misses
+//   error_count       INT DEFAULT 0,                -- Number of errors encountered
+//   warning_count     INT DEFAULT 0,                -- Number of warnings
 //   started_at        TIMESTAMPTZ,
 //   ended_at          TIMESTAMPTZ,
 //   fail_reason       TEXT,
@@ -93,6 +103,34 @@ export class WorkflowRunEntity {
   @Column({ type: 'int', default: 3 })
   max_retries!: number; // Max allowed retries
 
+  // Enhanced metrics (consolidated from ExecutionMetricsEntity)
+  @Column({ type: 'int', nullable: true })
+  queue_time?: number; // Time spent in queue before execution
+
+  @Column({ type: 'int', nullable: true })
+  memory_usage?: number; // Peak memory usage in MB
+
+  @Column({ type: 'int', nullable: true })
+  cpu_time?: number; // CPU time in ms
+
+  @Column({ type: 'int', default: 0 })
+  network_calls!: number; // Number of external API calls
+
+  @Column({ type: 'int', default: 0 })
+  network_time!: number; // Time spent on network calls
+
+  @Column({ type: 'int', default: 0 })
+  cache_hits!: number; // Number of cache hits
+
+  @Column({ type: 'int', default: 0 })
+  cache_misses!: number; // Number of cache misses
+
+  @Column({ type: 'int', default: 0 })
+  error_count!: number; // Number of errors encountered
+
+  @Column({ type: 'int', default: 0 })
+  warning_count!: number; // Number of warnings
+
   @Column({ type: 'timestamptz', nullable: true })
   started_at?: Date;
 
@@ -113,4 +151,16 @@ export class WorkflowRunEntity {
 
   @UpdateDateColumn()
   updated_at!: Date;
+
+  // Computed properties for convenience
+  get success_rate(): number | null {
+    if (this.total_steps === 0) return null;
+    return (this.completed_steps / this.total_steps) * 100;
+  }
+
+  get cache_hit_rate(): number | null {
+    const total_cache_requests = this.cache_hits + this.cache_misses;
+    if (total_cache_requests === 0) return null;
+    return (this.cache_hits / total_cache_requests) * 100;
+  }
 }

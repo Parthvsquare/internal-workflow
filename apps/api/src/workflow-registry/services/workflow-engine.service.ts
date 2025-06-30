@@ -11,7 +11,6 @@ import {
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
   WorkflowVariableEntity,
-  ExecutionMetricsEntity,
   WebhookEndpointEntity,
   ScheduleTriggerEntity,
 } from '@internal-workflow/storage';
@@ -73,8 +72,6 @@ export class WorkflowEngineService {
     private readonly subscriptionRepository: Repository<WorkflowSubscriptionEntity>,
     @InjectRepository(WorkflowVariableEntity)
     private readonly workflowVariableRepository: Repository<WorkflowVariableEntity>,
-    @InjectRepository(ExecutionMetricsEntity)
-    private readonly executionMetricsRepository: Repository<ExecutionMetricsEntity>,
     @InjectRepository(WebhookEndpointEntity)
     private readonly webhookEndpointRepository: Repository<WebhookEndpointEntity>,
     @InjectRepository(ScheduleTriggerEntity)
@@ -623,7 +620,7 @@ export class WorkflowEngineService {
   }
 
   /**
-   * Create detailed execution metrics for analytics
+   * Update workflow run with detailed execution metrics
    */
   private async createExecutionMetrics(
     run: WorkflowRunEntity,
@@ -632,43 +629,37 @@ export class WorkflowEngineService {
   ): Promise<void> {
     try {
       const executionTime = Date.now() - startTime;
-      const successfulSteps = stepResults.results.filter(
-        (r) => r.success
-      ).length;
-      const successRate =
-        stepResults.results.length > 0
-          ? (successfulSteps / stepResults.results.length) * 100
-          : 0;
 
       // Count errors and network calls from step results
       let errorCount = 0;
       let networkCalls = 0;
       let networkTime = 0;
+      let cacheHits = 0;
+      let cacheMisses = 0;
+      let warningCount = 0;
 
       stepResults.results.forEach((result) => {
         if (result.error) errorCount++;
         if (result.networkCalls) networkCalls += result.networkCalls;
         if (result.networkTime) networkTime += result.networkTime;
+        if (result.cacheHits) cacheHits += result.cacheHits;
+        if (result.cacheMisses) cacheMisses += result.cacheMisses;
+        if (result.warnings) warningCount += result.warnings;
       });
 
-      const metrics = this.executionMetricsRepository.create({
-        run_id: run.id,
-        workflow_id: run.workflow_id,
-        version_id: run.version_id,
-        trigger_type: run.trigger_type,
-        execution_time: executionTime,
-        step_count: stepResults.results.length,
-        success_rate: successRate,
+      // Update the workflow run with consolidated metrics
+      await this.runRepository.update(run.id, {
         network_calls: networkCalls,
         network_time: networkTime,
+        cache_hits: cacheHits,
+        cache_misses: cacheMisses,
         error_count: errorCount,
-        warning_count: 0, // Could be enhanced to track warnings
+        warning_count: warningCount,
+        // Note: success_rate and cache_hit_rate are computed properties
       });
-
-      await this.executionMetricsRepository.save(metrics);
     } catch (error) {
-      this.logger.error('Failed to create execution metrics:', error);
-      // Don't fail the workflow if metrics creation fails
+      this.logger.error('Failed to update execution metrics:', error);
+      // Don't fail the workflow if metrics update fails
     }
   }
 
