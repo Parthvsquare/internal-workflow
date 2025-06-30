@@ -16,6 +16,13 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["development"]
+    "customConditions": ["development"],
+    "paths": {
+      "@internal-workflow/queue-v2": ["library/queue-v2/src/index.ts"],
+      "@internal-workflow/storage": ["library/storage/src/index.ts"],
+      "@internal-workflow/workflow-engine": [
+        "library/workflow-engine/src/index.ts"
+      ]
+    }
   }
 }

@@ -1,18 +1,18 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { WorkflowConsumer } from '@internal-workflow/queue-v2';
-import {
-  DatabaseChangeEvent,
-  WorkflowMessage,
-} from '@internal-workflow/queue-v2';
+import { WorkflowMessage } from '@internal-workflow/queue-v2';
+import { WorkflowEngineService } from '@internal-workflow/workflow-engine';
 
 @Injectable()
 export class WorkflowProcessorService implements OnModuleInit {
   private readonly logger = new Logger(WorkflowProcessorService.name);
-  private readonly workflowEngineUrl = 'http://localhost:3000';
   private readonly debeziumTopicPrefix =
     process.env['DEBEZIUM_TOPIC_PREFIX'] || 'dbserver1';
 
-  constructor(private readonly workflowConsumer: WorkflowConsumer) {}
+  constructor(
+    private readonly workflowConsumer: WorkflowConsumer,
+    private readonly workflowEngine: WorkflowEngineService
+  ) {}
 
   async onModuleInit() {
     await this.startListening();
@@ -23,8 +23,9 @@ export class WorkflowProcessorService implements OnModuleInit {
       'Starting to listen for database changes and workflow triggers...'
     );
 
-    // Get active trigger registries to determine which topics to subscribe to
-    const triggerRegistries = await this.loadTriggerRegistries();
+    // Get active trigger registries directly from the workflow engine
+    const triggerRegistries =
+      await this.workflowEngine.getActiveTriggerRegistries();
 
     console.log(
       '===> ~ WorkflowProcessorService ~ startListening ~ triggerRegistries:',
@@ -36,7 +37,7 @@ export class WorkflowProcessorService implements OnModuleInit {
 
     // Add Debezium topics based on trigger registries
     for (const trigger of triggerRegistries) {
-      if (trigger.eventSource === 'debezium') {
+      if (trigger.event_source === 'debezium') {
         const topicName = this.getDebeziumTopicName(trigger);
 
         console.log(
@@ -75,22 +76,6 @@ export class WorkflowProcessorService implements OnModuleInit {
     // Start the consumer after all subscriptions are registered
     await this.workflowConsumer.startConsumer();
     this.logger.log('Workflow consumer started successfully');
-  }
-
-  private async loadTriggerRegistries(): Promise<any[]> {
-    try {
-      const response = await fetch(
-        `${this.workflowEngineUrl}/api/workflow-registry/triggers?active=true`
-      );
-      const triggerRegistries = (await response.json()) as any[];
-      this.logger.log(
-        `Loaded ${triggerRegistries.length} active trigger registries`
-      );
-      return triggerRegistries;
-    } catch (error) {
-      this.logger.error('Failed to load trigger registries:', error);
-      return [];
-    }
   }
 
   private getDebeziumTopicName(trigger: any): string | null {
@@ -163,7 +148,7 @@ export class WorkflowProcessorService implements OnModuleInit {
         `Transformed trigger data: ${JSON.stringify(triggerData)}`
       );
 
-      // Find workflows that should be triggered by this database change
+      // Use the workflow engine directly instead of HTTP calls
       await this.triggerMatchingWorkflows(triggerData);
     } catch (error) {
       this.logger.error('Error processing database change:', error);
@@ -174,8 +159,17 @@ export class WorkflowProcessorService implements OnModuleInit {
     this.logger.log(`Received workflow trigger: ${JSON.stringify(message)}`);
 
     try {
-      // Execute the workflow
-      await this.executeWorkflow(message.payload);
+      // Execute the workflow using the workflow engine directly
+      const result = await this.workflowEngine.executeWorkflow(
+        message.payload.workflowId,
+        {
+          triggerData: message.payload.triggerData,
+          triggerType: 'manual',
+          executionMode: 'async',
+        }
+      );
+
+      this.logger.log(`Workflow execution result: ${JSON.stringify(result)}`);
     } catch (error) {
       this.logger.error('Error processing workflow trigger:', error);
     }
@@ -260,58 +254,19 @@ export class WorkflowProcessorService implements OnModuleInit {
         triggerData.table
       }_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Call the workflow engine API to find and trigger matching workflows
-      const response = await fetch(
-        `${this.workflowEngineUrl}/api/workflow-registry/trigger/${triggerData.table}_db_change`,
+      // Use the workflow engine directly instead of HTTP calls
+      const result = await this.workflowEngine.processTriggerEvent(
+        `${triggerData.table}_db_change`,
+        triggerData,
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventData: triggerData,
-            context: {
-              trigger_event_id: trigger_event_id,
-              timestamp: triggerData.timestamp,
-            },
-          }),
+          trigger_event_id: trigger_event_id,
+          // timestamp: triggerData.timestamp,
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
       this.logger.log(`Triggered workflows: ${JSON.stringify(result)}`);
     } catch (error) {
       this.logger.error('Error triggering workflows:', error);
-    }
-  }
-
-  private async executeWorkflow(payload: any) {
-    try {
-      const response = await fetch(
-        `${this.workflowEngineUrl}/api/workflows/${payload.workflowId}/execute`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            triggerData: payload.triggerData,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      this.logger.log(`Workflow execution result: ${JSON.stringify(result)}`);
-    } catch (error) {
-      this.logger.error('Error executing workflow:', error);
     }
   }
 }

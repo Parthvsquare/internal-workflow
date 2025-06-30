@@ -1,0 +1,15 @@
+{
+  "name": "@internal-workflow/workflow-engine",
+  "version": "0.0.1",
+  "description": "Shared workflow engine for independent services",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.0.2",
+    "@nestjs/typeorm": "^10.0.0",
+    "typeorm": "^0.3.17"
+  },
+  "peerDependencies": {
+    "@internal-workflow/storage": "*",
+    "@internal-workflow/queue-v2": "*"
+  }
+}

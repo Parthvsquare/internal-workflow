@@ -1,0 +1,19 @@
+{
+  "name": "workflow-engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "library/workflow-engine/src",
+  "projectType": "library",
+  "tags": ["npm:private"],
+  "main": "library/workflow-engine/src/index.ts",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "library/workflow-engine/tsconfig.lib.json"
+      }
+    }
+  }
+}

@@ -20,6 +20,12 @@
     },
     {
       "path": "./library/queue-v2"
+    },
+    {
+      "path": "./library/workflow-engine"
+    },
+    {
+      "path": "./library/wk-engine"
     }
   ]
 }
