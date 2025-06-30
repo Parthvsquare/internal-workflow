@@ -20,6 +20,9 @@
     },
     {
       "path": "./library/queue-v2"
+    },
+    {
+      "path": "./library/frontend-shared"
     }
   ]
 }
