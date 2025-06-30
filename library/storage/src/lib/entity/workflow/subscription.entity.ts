@@ -8,7 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinitionEntity } from './definition';
+import { WorkflowDefinitionEntity } from './definition.entity';
 import { WorkflowTriggerRegistryEntity } from './trigger-registry.entity';
 
 @Entity('workflow_subscription')

@@ -7,16 +7,17 @@ import {
 } from './entity/workflow/credential.entity';
 import { WorkflowActionRegistryEntity } from './entity/workflow/action-registry.entity';
 import { WorkflowStepEntity } from './entity/workflow/step.entity';
-import { WorkflowVersionEntity } from './entity/workflow/version';
+import { WorkflowVersionEntity } from './entity/workflow/version.entity';
 
-import { WorkflowDefinitionEntity } from './entity/workflow/definition';
+import { WorkflowDefinitionEntity } from './entity/workflow/definition.entity';
 import { WorkflowEdgeEntity } from './entity/workflow/edge.entity';
-import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json';
-import { DailyWorkflowMetricsEntity } from './entity/workflow/daily.metrics';
-import { ExecutionLogEntity } from './entity/workflow/execution.log';
-import { WorkflowRunEntity } from './entity/workflow/run';
-import { StepRunEntity } from './entity/workflow/step.run';
-import { WorkflowSubscriptionEntity } from './entity/workflow/workflow-subscription.entity';
+import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json.view-entity';
+import { WorkflowRunEntity } from './entity/workflow/run.entity';
+import { StepRunEntity } from './entity/workflow/step.run.entity';
+import { WorkflowSubscriptionEntity } from './entity/workflow/subscription.entity';
+import { WorkflowVariableEntity } from './entity/workflow/variable.entity';
+import { WebhookEndpointEntity } from './entity/workflow/webhook-endpoint.entity';
+import { ScheduleTriggerEntity } from './entity/workflow/schedule-trigger.entity';
 import { TaskEntity } from './entity';
 
 export const ENTITY = [
@@ -29,11 +30,12 @@ export const ENTITY = [
   WorkflowDefinitionEntity,
   WorkflowEdgeEntity,
   WorkflowLatestJsonEntity,
-  DailyWorkflowMetricsEntity,
-  ExecutionLogEntity,
   WorkflowRunEntity,
   StepRunEntity,
   WorkflowSubscriptionEntity,
+  WorkflowVariableEntity,
+  WebhookEndpointEntity,
+  ScheduleTriggerEntity,
   TaskEntity,
 ];
 

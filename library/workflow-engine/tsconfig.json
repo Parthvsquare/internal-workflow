@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../queue-v2"
+    },
+    {
+      "path": "../storage"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

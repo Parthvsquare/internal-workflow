@@ -13,6 +13,9 @@ import {
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
+  WorkflowVariableEntity,
+  WebhookEndpointEntity,
+  ScheduleTriggerEntity,
   TaskEntity,
 } from '@internal-workflow/storage';
 
@@ -32,6 +35,9 @@ const ENTITIES = [
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
+  WorkflowVariableEntity,
+  WebhookEndpointEntity,
+  ScheduleTriggerEntity,
   TaskEntity,
 ];
 

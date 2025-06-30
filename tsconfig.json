@@ -22,7 +22,7 @@
       "path": "./library/queue-v2"
     },
     {
-      "path": "./library/frontend-shared"
+      "path": "./library/workflow-engine"
     }
   ]
 }

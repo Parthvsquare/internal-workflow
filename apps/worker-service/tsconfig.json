@@ -4,6 +4,12 @@
   "include": [],
   "references": [
     {
+      "path": "../../library/workflow-engine"
+    },
+    {
+      "path": "../../library/storage"
+    },
+    {
       "path": "../../library/queue-v2"
     },
     {

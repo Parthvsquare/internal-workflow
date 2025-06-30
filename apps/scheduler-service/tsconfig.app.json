@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "dist",
     "module": "nodenext",
     "types": ["node"],
@@ -14,6 +15,9 @@
   "include": ["src/**/*.ts"],
   "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
   "references": [
+    {
+      "path": "../../library/workflow-engine/tsconfig.lib.json"
+    },
     {
       "path": "../../library/queue-v2/tsconfig.lib.json"
     },
