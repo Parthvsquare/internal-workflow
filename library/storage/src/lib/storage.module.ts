@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkflowTriggerRegistryEntity } from './entity/workflow/trigger-registry.entity';
+import { WorkflowTriggerRegistryEntity } from './entity/workflow/workflow.trigger-registry.entity';
 import {
   WorkflowCredentialTypeEntity,
   WorkflowUserCredentialEntity,
-} from './entity/workflow/credential.entity';
-import { WorkflowActionRegistryEntity } from './entity/workflow/action-registry.entity';
-import { WorkflowStepEntity } from './entity/workflow/step.entity';
-import { WorkflowVersionEntity } from './entity/workflow/version.entity';
+} from './entity/workflow/workflow.credential.entity';
+import { WorkflowActionRegistryEntity } from './entity/workflow/workflow.action-registry.entity';
+import { WorkflowStepEntity } from './entity/workflow/workflow.step.entity';
+import { WorkflowVersionEntity } from './entity/workflow/workflow.version.entity';
 
-import { WorkflowDefinitionEntity } from './entity/workflow/definition.entity';
-import { WorkflowEdgeEntity } from './entity/workflow/edge.entity';
-import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json.view-entity';
-import { WorkflowRunEntity } from './entity/workflow/run.entity';
-import { StepRunEntity } from './entity/workflow/step.run.entity';
-import { WorkflowSubscriptionEntity } from './entity/workflow/subscription.entity';
-import { WorkflowVariableEntity } from './entity/workflow/variable.entity';
-import { WebhookEndpointEntity } from './entity/workflow/webhook-endpoint.entity';
-import { ScheduleTriggerEntity } from './entity/workflow/schedule-trigger.entity';
+import { WorkflowDefinitionEntity } from './entity/workflow/workflow.definition.entity';
+import { WorkflowEdgeEntity } from './entity/workflow/workflow.edge.entity';
+import { WorkflowLatestJsonEntity } from './entity/workflow/workflow.latest.json.view-entity';
+import { WorkflowRunEntity } from './entity/workflow/workflow.run.entity';
+import { StepRunEntity } from './entity/workflow/workflow.step.run.entity';
+import { WorkflowSubscriptionEntity } from './entity/workflow/workflow.subscription.entity';
+import { WorkflowVariableEntity } from './entity/workflow/workflow.variable.entity';
+import { WebhookEndpointEntity } from './entity/workflow/workflow.webhook-endpoint.entity';
+import { ScheduleTriggerEntity } from './entity/workflow/workflow.schedule-trigger.entity';
 import { TaskEntity } from './entity';
 
 export const ENTITY = [

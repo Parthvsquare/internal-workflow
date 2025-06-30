@@ -29,7 +29,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinitionEntity } from './definition.entity';
+import { WorkflowDefinitionEntity } from './workflow.definition.entity';
 
 @Entity('webhook_endpoint')
 @Index('idx_webhook_endpoint_path', ['endpoint_path'])

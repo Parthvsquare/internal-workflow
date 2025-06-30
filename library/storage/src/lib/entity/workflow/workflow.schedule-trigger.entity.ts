@@ -28,7 +28,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinitionEntity } from './definition.entity';
+import { WorkflowDefinitionEntity } from './workflow.definition.entity';
 
 @Entity('schedule_trigger')
 @Index('idx_schedule_trigger_workflow', ['workflow_id'])
