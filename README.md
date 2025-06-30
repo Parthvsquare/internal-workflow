@@ -55,11 +55,11 @@ Ran tool
 
 ### **3. RUNTIME DATA** (Execution Tracking)
 
-| **Table**      | **What It Stores**                                   | **When Saved**                | **Saved By**       |
-| -------------- | ---------------------------------------------------- | ----------------------------- | ------------------ |
-| `workflow_run` | Overall execution tracking (status, metrics, timing) | Workflow execution starts     | **Worker Service** |
-| `step_run`     | Individual step execution details (results, errors)  | Each step executes            | **Worker Service** |
-| `tasks`        | Generated tasks from workflow actions                | Task creation action executes | **Worker Service** |
+| **Table**            | **What It Stores**                                   | **When Saved**                | **Saved By**       |
+| -------------------- | ---------------------------------------------------- | ----------------------------- | ------------------ |
+| `workflow_execution` | Overall execution tracking (status, metrics, timing) | Workflow execution starts     | **Worker Service** |
+| `step_execution`     | Individual step execution details (results, errors)  | Each step executes            | **Worker Service** |
+| `tasks`              | Generated tasks from workflow actions                | Task creation action executes | **Worker Service** |
 
 ### **4. CONVENIENCE VIEW**
 
