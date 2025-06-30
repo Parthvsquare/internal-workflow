@@ -8,7 +8,7 @@ export * from './workflow/definition.entity';
 export * from './workflow/edge.entity';
 export * from './workflow/latest.json.view-entity';
 export * from './workflow/run.entity';
-export * from './workflow/step.run';
+export * from './workflow/step.run.entity';
 export * from './workflow/webhook-endpoint.entity';
 export * from './workflow/variable.entity';
 export * from './workflow/schedule-trigger.entity';

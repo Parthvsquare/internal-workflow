@@ -13,7 +13,7 @@ import { WorkflowDefinitionEntity } from './entity/workflow/definition.entity';
 import { WorkflowEdgeEntity } from './entity/workflow/edge.entity';
 import { WorkflowLatestJsonEntity } from './entity/workflow/latest.json.view-entity';
 import { WorkflowRunEntity } from './entity/workflow/run.entity';
-import { StepRunEntity } from './entity/workflow/step.run';
+import { StepRunEntity } from './entity/workflow/step.run.entity';
 import { WorkflowSubscriptionEntity } from './entity/workflow/subscription.entity';
 import { WorkflowVariableEntity } from './entity/workflow/variable.entity';
 import { WebhookEndpointEntity } from './entity/workflow/webhook-endpoint.entity';
