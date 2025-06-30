@@ -35,8 +35,8 @@ Main workflow container that appears in the UI
   is_active: boolean,
   is_template: boolean, // Template workflows for quick setup
   pinned: boolean, // User favorites
-  created_by?: UUID,
-  updated_by?: UUID
+  created_by?: DATE,
+  updated_by?: DATE
 }
 ```
 
