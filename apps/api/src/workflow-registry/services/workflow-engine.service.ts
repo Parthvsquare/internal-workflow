@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   WorkflowDefinitionEntity,
-  WorkflowRunEntity,
-  StepRunEntity,
+  WorkflowExecutionEntity,
+  StepExecutionEntity,
   WorkflowStepEntity,
   WorkflowVersionEntity,
   WorkflowActionRegistryEntity,
@@ -56,10 +56,10 @@ export class WorkflowEngineService {
   constructor(
     @InjectRepository(WorkflowDefinitionEntity)
     private readonly workflowRepository: Repository<WorkflowDefinitionEntity>,
-    @InjectRepository(WorkflowRunEntity)
-    private readonly runRepository: Repository<WorkflowRunEntity>,
-    @InjectRepository(StepRunEntity)
-    private readonly stepRunRepository: Repository<StepRunEntity>,
+    @InjectRepository(WorkflowExecutionEntity)
+    private readonly runRepository: Repository<WorkflowExecutionEntity>,
+    @InjectRepository(StepExecutionEntity)
+    private readonly stepRunRepository: Repository<StepExecutionEntity>,
     @InjectRepository(WorkflowStepEntity)
     private readonly stepRepository: Repository<WorkflowStepEntity>,
     @InjectRepository(WorkflowVersionEntity)
@@ -250,7 +250,7 @@ export class WorkflowEngineService {
   private async createWorkflowRun(
     workflow: WorkflowDefinitionEntity,
     context: WorkflowContext
-  ): Promise<WorkflowRunEntity> {
+  ): Promise<WorkflowExecutionEntity> {
     // Create trigger summary if we have trigger data
     const triggerSummary = context.triggerData
       ? this.createTriggerSummary(context.triggerData, context.triggerType)
@@ -284,7 +284,7 @@ export class WorkflowEngineService {
    */
   private async executeSteps(
     steps: WorkflowStepEntity[],
-    run: WorkflowRunEntity,
+    run: WorkflowExecutionEntity,
     context: WorkflowContext
   ): Promise<{ success: boolean; results: any[] }> {
     const results: any[] = [];
@@ -549,7 +549,7 @@ export class WorkflowEngineService {
     runId: string,
     status: string,
     inputData?: any
-  ): Promise<StepRunEntity> {
+  ): Promise<StepExecutionEntity> {
     const stepRun = this.stepRunRepository.create({
       run_id: runId,
       step_id: step.id,
@@ -597,10 +597,10 @@ export class WorkflowEngineService {
    * Update step run record with execution results
    */
   private async updateStepRun(
-    stepRun: StepRunEntity,
+    stepRun: StepExecutionEntity,
     result: ExecutionResult
   ): Promise<void> {
-    const updateData: Partial<StepRunEntity> = {
+    const updateData: Partial<StepExecutionEntity> = {
       status: result.success ? 'SUCCESS' : 'FAILED',
       ended_at: new Date(),
       execution_time: result.executionTime || 0,
@@ -623,7 +623,7 @@ export class WorkflowEngineService {
    * Update workflow run with detailed execution metrics
    */
   private async createExecutionMetrics(
-    run: WorkflowRunEntity,
+    run: WorkflowExecutionEntity,
     stepResults: { success: boolean; results: any[] },
     startTime: number
   ): Promise<void> {

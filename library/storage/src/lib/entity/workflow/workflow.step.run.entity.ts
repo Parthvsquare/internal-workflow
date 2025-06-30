@@ -7,11 +7,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('step_run')
-@Index('idx_step_status', ['status'])
-@Index('idx_step_execution_time', ['execution_time'])
-@Index('idx_step_run_started_at', ['started_at'])
-export class StepRunEntity {
+@Entity('step_execution')
+@Index('idx_step_execution_status', ['status'])
+@Index('idx_step_run_execution_time', ['execution_time'])
+@Index('idx_step_execution_started_at', ['started_at'])
+export class StepExecutionEntity {
   @PrimaryColumn({ type: 'uuid', nullable: false })
   run_id!: string;
 

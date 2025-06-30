@@ -6,8 +6,8 @@ import { QueueModule } from '@internal-workflow/queue-v2';
 // Import all workflow entities
 import {
   WorkflowDefinitionEntity,
-  WorkflowRunEntity,
-  StepRunEntity,
+  WorkflowExecutionEntity,
+  StepExecutionEntity,
   WorkflowStepEntity,
   WorkflowVersionEntity,
   WorkflowActionRegistryEntity,
@@ -28,8 +28,8 @@ import { WorkflowSubscriptionService } from './workflow-subscription.service';
 
 const ENTITIES = [
   WorkflowDefinitionEntity,
-  WorkflowRunEntity,
-  StepRunEntity,
+  WorkflowExecutionEntity,
+  StepExecutionEntity,
   WorkflowStepEntity,
   WorkflowVersionEntity,
   WorkflowActionRegistryEntity,

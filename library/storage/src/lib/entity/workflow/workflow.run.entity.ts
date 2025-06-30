@@ -51,13 +51,13 @@ import {
 // CREATE INDEX idx_run_trigger_type ON workflow_run (trigger_type);
 // CREATE INDEX idx_run_execution_time ON workflow_run (execution_time);
 
-@Entity('workflow_run')
-@Index('idx_run_status', ['status'])
-@Index('idx_run_started_at', ['started_at'])
-@Index('idx_run_trigger_type', ['trigger_type'])
-@Index('idx_run_execution_time', ['execution_time'])
-@Index('idx_run_workflow_id', ['workflow_id'])
-export class WorkflowRunEntity {
+@Entity('workflow_execution')
+@Index('idx_execution_status', ['status'])
+@Index('idx_execution_started_at', ['started_at'])
+@Index('idx_execution_trigger_type', ['trigger_type'])
+@Index('idx_execution_execution_time', ['execution_time'])
+@Index('idx_execution_workflow_id', ['workflow_id'])
+export class WorkflowExecutionEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 

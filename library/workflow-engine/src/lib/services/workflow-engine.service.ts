@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   WorkflowDefinitionEntity,
-  WorkflowRunEntity,
+  WorkflowExecutionEntity,
   WorkflowStepEntity,
   WorkflowActionRegistryEntity,
   WorkflowTriggerRegistryEntity,
   WorkflowSubscriptionEntity,
   WorkflowVariableEntity,
-  StepRunEntity,
+  StepExecutionEntity,
 } from '@internal-workflow/storage';
 import {
   WorkflowContext,
@@ -25,12 +25,12 @@ export class WorkflowEngineService {
   constructor(
     @InjectRepository(WorkflowDefinitionEntity)
     private readonly workflowRepository: Repository<WorkflowDefinitionEntity>,
-    @InjectRepository(WorkflowRunEntity)
-    private readonly runRepository: Repository<WorkflowRunEntity>,
+    @InjectRepository(WorkflowExecutionEntity)
+    private readonly runRepository: Repository<WorkflowExecutionEntity>,
     @InjectRepository(WorkflowStepEntity)
     private readonly stepRepository: Repository<WorkflowStepEntity>,
-    @InjectRepository(StepRunEntity)
-    private readonly stepRunRepository: Repository<StepRunEntity>,
+    @InjectRepository(StepExecutionEntity)
+    private readonly stepRunRepository: Repository<StepExecutionEntity>,
     @InjectRepository(WorkflowTriggerRegistryEntity)
     private readonly triggerRegistry: Repository<WorkflowTriggerRegistryEntity>,
     @InjectRepository(WorkflowSubscriptionEntity)
@@ -284,7 +284,7 @@ export class WorkflowEngineService {
   private async createWorkflowRun(
     workflow: WorkflowDefinitionEntity,
     context: WorkflowContext
-  ): Promise<WorkflowRunEntity> {
+  ): Promise<WorkflowExecutionEntity> {
     const run = this.runRepository.create({
       workflow_id: workflow.id,
       version_id: workflow.latest_ver_id!,
