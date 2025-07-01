@@ -8,5 +8,12 @@
     "noImplicitAny": false
   },
   "include": ["jest.config.ts", "src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../library/workflow-engine"
+    },
+    {
+      "path": "../../library/storage"
+    }
+  ]
 }
