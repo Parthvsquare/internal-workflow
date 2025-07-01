@@ -1,52 +1,49 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
-  Param,
-  Query,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBody,
   ApiBadRequestResponse,
-  ApiNotFoundResponse,
+  ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiOkResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
 import { WorkflowRegistryService } from './workflow-registry.service';
-import { WorkflowEngineService } from './services/workflow-engine.service';
 // Kafka consumer moved to worker-service
 import {
+  ActionCategory,
+  ActionRegistryResponseDto,
   CreateActionRegistryDto,
   UpdateActionRegistryDto,
-  ActionRegistryResponseDto,
-  ActionCategory,
 } from './dto/action-registry.dto';
 import {
   CreateTriggerRegistryDto,
-  UpdateTriggerRegistryDto,
-  TriggerRegistryResponseDto,
-  TriggerCategory,
   EventSource,
+  TriggerCategory,
+  TriggerRegistryResponseDto,
+  UpdateTriggerRegistryDto,
 } from './dto/trigger-registry.dto';
 
 @ApiTags('workflow-registry')
 @Controller('workflow-registry')
 export class WorkflowRegistryController {
   constructor(
-    private readonly workflowRegistryService: WorkflowRegistryService,
-    private readonly workflowEngine: WorkflowEngineService
+    private readonly workflowRegistryService: WorkflowRegistryService
   ) {}
 
   // Action Registry Endpoints
@@ -510,44 +507,5 @@ export class WorkflowRegistryController {
         },
       ],
     };
-  }
-
-  @Post('trigger/:triggerKey')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Process trigger event' })
-  @ApiParam({ name: 'triggerKey', description: 'Trigger key to process' })
-  @ApiBody({
-    description: 'Trigger event data',
-    schema: {
-      type: 'object',
-      properties: {
-        eventData: { type: 'object' },
-        context: { type: 'object' },
-      },
-    },
-  })
-  @ApiOkResponse({ description: 'Trigger processed successfully' })
-  @ApiBadRequestResponse({ description: 'Invalid trigger data' })
-  async processTrigger(
-    @Param('triggerKey') triggerKey: string,
-    @Body() body: { eventData: any; context?: any }
-  ): Promise<{ success: boolean; message: string }> {
-    try {
-      await this.workflowEngine.processTriggerEvent(
-        triggerKey,
-        body.eventData,
-        body.context || {}
-      );
-
-      return {
-        success: true,
-        message: `Trigger ${triggerKey} processed successfully`,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
   }
 }
