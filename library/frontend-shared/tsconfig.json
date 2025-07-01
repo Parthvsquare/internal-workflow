@@ -1,6 +1,9 @@
 {
   "files": [],
   "include": [],
+  "compilerOptions": {
+    "baseUrl": "./"
+  },
   "references": [
     {
       "path": "./tsconfig.app.json"
