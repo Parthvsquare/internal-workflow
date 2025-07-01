@@ -7,9 +7,6 @@
   },
   "references": [
     {
-      "path": "../../library/queue-v2"
-    },
-    {
       "path": "../../library/storage"
     },
     {
