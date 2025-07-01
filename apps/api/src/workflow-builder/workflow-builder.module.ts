@@ -9,8 +9,8 @@ import {
 } from '@internal-workflow/storage';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkflowGenerationController } from './workflow-generation.controller';
-import { WorkflowGenerationService } from './workflow-generation.service';
+import { WorkflowBuilderController } from './workflow-builder.controller';
+import { WorkflowBuilderService } from './workflow-builder.service';
 
 const ENTITIES = [
   WorkflowDefinitionEntity,
@@ -24,8 +24,8 @@ const ENTITIES = [
 
 @Module({
   imports: [TypeOrmModule.forFeature(ENTITIES)],
-  controllers: [WorkflowGenerationController],
-  providers: [WorkflowGenerationService],
-  exports: [WorkflowGenerationService],
+  controllers: [WorkflowBuilderController],
+  providers: [WorkflowBuilderService],
+  exports: [WorkflowBuilderService],
 })
-export class WorkflowGenerationModule {}
+export class WorkflowBuilderModule {}

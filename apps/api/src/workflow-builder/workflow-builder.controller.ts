@@ -17,7 +17,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { WorkflowGenerationService } from './workflow-generation.service';
+import { WorkflowBuilderService } from './workflow-builder.service';
 import {
   CreateWorkflowDto,
   UpdateWorkflowDto,
@@ -27,8 +27,8 @@ import {
 
 @ApiTags('Workflow Generation')
 @Controller('/workflows')
-export class WorkflowGenerationController {
-  constructor(private readonly workflowService: WorkflowGenerationService) {}
+export class WorkflowBuilderController {
+  constructor(private readonly workflowService: WorkflowBuilderService) {}
 
   @Post()
   @ApiOperation({

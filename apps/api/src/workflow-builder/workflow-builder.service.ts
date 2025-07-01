@@ -25,8 +25,8 @@ import {
 } from './dto/workflow.dto';
 
 @Injectable()
-export class WorkflowGenerationService {
-  private readonly logger = new Logger(WorkflowGenerationService.name);
+export class WorkflowBuilderService {
+  private readonly logger = new Logger(WorkflowBuilderService.name);
 
   constructor(
     @InjectRepository(WorkflowDefinitionEntity)

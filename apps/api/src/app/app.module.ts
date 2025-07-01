@@ -9,12 +9,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { WorkflowRegistryModule } from '../workflow-registry/workflow-registry.module';
-import { WorkflowGenerationModule } from '../workflow-generation/workflow-generation.module';
+import { WorkflowBuilderModule } from '../workflow-builder/workflow-builder.module';
 
 const MODULES = [
   InternalWorkflowStorageModule,
   WorkflowRegistryModule,
-  WorkflowGenerationModule,
+  WorkflowBuilderModule,
 ];
 
 @Module({
