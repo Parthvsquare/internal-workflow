@@ -1,8 +1,3 @@
-Let me help you understand the database storage strategy and how different types of data are saved across the workflow system.
-Search files...
-
-Based on the codebase analysis, here's a comprehensive breakdown of **which database saves what and how** in your workflow system:
-
 ## 🗄️ **Database Configuration**
 
 **Single PostgreSQL Database** shared across all services:
@@ -193,5 +188,3 @@ if (action_key === 'task_management') {
 | **API Service**       | User interface, workflow management | CREATE/UPDATE design-time data   |
 | **Worker Service**    | Workflow execution                  | CREATE/UPDATE runtime data       |
 | **Scheduler Service** | Webhooks, scheduling                | CREATE/UPDATE trigger management |
-
-This architecture ensures **data consistency** across services while allowing each service to focus on its specific responsibilities. All services share the same PostgreSQL database but operate on different subsets of the data based on their roles.

@@ -11,9 +11,9 @@ import { WorkflowVersionEntity } from './entity/workflow/workflow.version.entity
 
 import { WorkflowDefinitionEntity } from './entity/workflow/workflow.definition.entity';
 import { WorkflowEdgeEntity } from './entity/workflow/workflow.edge.entity';
-import { WorkflowLatestJsonEntity } from './entity/workflow/workflow.latest.json.view-entity';
-import { WorkflowExecutionEntity } from './entity/workflow/workflow.run.entity';
-import { StepExecutionEntity } from './entity/workflow/workflow.step.run.entity';
+import { WorkflowLatestJsonEntity } from './entity/workflow/workflow.latest-json.view-entity';
+import { WorkflowExecutionEntity } from './entity/workflow/workflow.execution.entity';
+import { StepExecutionEntity } from './entity/workflow/workflow.step-execution.entity';
 import { WorkflowSubscriptionEntity } from './entity/workflow/workflow.subscription.entity';
 import { WorkflowVariableEntity } from './entity/workflow/workflow.variable.entity';
 import { WebhookEndpointEntity } from './entity/workflow/workflow.webhook-endpoint.entity';
