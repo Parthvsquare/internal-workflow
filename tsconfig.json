@@ -32,9 +32,6 @@
     },
     {
       "path": "./apps/worker-services-e2e"
-    },
-    {
-      "path": "./apps/worker-services"
     }
   ]
 }
