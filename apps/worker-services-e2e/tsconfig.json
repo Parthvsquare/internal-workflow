@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "out-tsc/@internal-workflow/worker-services-e2e",
+    "esModuleInterop": true,
+    "noUnusedLocals": false,
+    "noImplicitAny": false
+  },
+  "include": ["jest.config.ts", "src/**/*.ts"],
+  "references": []
+}

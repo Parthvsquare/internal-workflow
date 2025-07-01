@@ -29,6 +29,12 @@
     },
     {
       "path": "./library/frontend-shared"
+    },
+    {
+      "path": "./apps/worker-services-e2e"
+    },
+    {
+      "path": "./apps/worker-services"
     }
   ]
 }
