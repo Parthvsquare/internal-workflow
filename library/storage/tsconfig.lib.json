@@ -3,10 +3,11 @@
   "compilerOptions": {
     "baseUrl": "./",
     "rootDir": "./src",
+    "paths": {
+      "@internal-workflow/queue-v2": ["../queue-v2/src/index.ts"],
+      "@internal-workflow/workflow-engine": ["../workflow-engine/src/index.ts"]
+    },
     "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
