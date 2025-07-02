@@ -1,5 +1,9 @@
-import { IBaseSchema, IDisplayOptions, IValidationRule } from './workflow.base';
-import { IFilterValue } from './workflow.filter';
+import {
+  IBaseSchema,
+  IDisplayOptions,
+  IValidationRule,
+} from './workflow-base.interface';
+import { IFilterValue } from './workflow-filter.interface';
 
 export type PropertyType =
   | 'string'

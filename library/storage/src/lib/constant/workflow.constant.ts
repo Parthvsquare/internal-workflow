@@ -1,4 +1,4 @@
-import { IFilterOperatorDefinition } from '../interface/workflow.filter';
+import { IFilterOperatorDefinition } from '../interface/workflow-filter.interface';
 
 export const FILTER_OPERATORS: IFilterOperatorDefinition[] = [
   // String operators

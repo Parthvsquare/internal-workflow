@@ -1,5 +1,5 @@
-import { IBaseSchema } from './workflow.base';
-import { IPropertyOption } from './workflow.property-schema';
+import { IBaseSchema } from './workflow-base.interface';
+import { IPropertyOption } from './workflow-property-schema.interface';
 
 export type FilterOperatorType =
   | 'string'

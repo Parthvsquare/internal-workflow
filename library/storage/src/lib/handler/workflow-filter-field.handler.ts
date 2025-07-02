@@ -1,6 +1,6 @@
 import moment from 'moment';
-import { FILTER_OPERATORS } from '../constant/workflow';
-import { ValidationResult } from '../dto/workflow.filter';
+import { FILTER_OPERATORS } from '../constant/workflow.constant';
+import { ValidationResult } from '../dto/workflow-filter.dto';
 import {
   FilterOperator,
   FilterOperatorType,
@@ -8,8 +8,8 @@ import {
   IFilterField,
   IFilterOperatorDefinition,
   IFilterValue,
-} from '../interface/workflow.filter';
-import { IPropertyOption } from '../interface/workflow.property-schema';
+} from '../interface/workflow-filter.interface';
+import { IPropertyOption } from '../interface/workflow-property-schema.interface';
 
 export class FilterField implements IFilterField {
   displayName!: string;
