@@ -31,7 +31,7 @@
       "path": "./apps/worker-services-e2e"
     },
     {
-      "path": "./apps/frontend"
+      "path": "./apps/web"
     }
   ]
 }

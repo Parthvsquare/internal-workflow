@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": "./",
-    "rootDir": "./src",
+    "baseUrl": "./src",
+    "rootDir": "./",
     "paths": {
       "@internal-workflow/queue-v2": ["../queue-v2/src/index.ts"],
       "@internal-workflow/workflow-engine": ["../workflow-engine/src/index.ts"]
