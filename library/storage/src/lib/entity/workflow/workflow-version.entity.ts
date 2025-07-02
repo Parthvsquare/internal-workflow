@@ -25,8 +25,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinitionEntity } from './workflow.definition.entity';
-import { WorkflowStepEntity } from './workflow.step.entity';
+import { WorkflowDefinitionEntity } from './workflow-definition.entity';
+import { WorkflowStepEntity } from './workflow-step.entity';
 
 @Entity('workflow_version')
 @Index('idx_workflow_version_key', ['workflow_id', 'version_num'])
