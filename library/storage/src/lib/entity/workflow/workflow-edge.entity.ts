@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowStepEntity } from './workflow.step.entity';
+import { WorkflowStepEntity } from './workflow-step.entity';
 
 @Entity('workflow_edge')
 @Index('idx_workflow_edge_from_step', ['from_step_id'])

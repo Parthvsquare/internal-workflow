@@ -13,7 +13,7 @@ import {
   OptionsProperty,
   ResourceLocatorProperty,
   StringProperty,
-} from '../handler/workflow.property-schema';
+} from '../handler/workflow-property-schema.handler';
 import {
   IBooleanProperty,
   ICollectionProperty,
@@ -29,7 +29,7 @@ import {
   IOptionsProperty,
   IResourceLocatorProperty,
   IStringProperty,
-} from '../interface/workflow.property-schema';
+} from '../interface/workflow-property-schema.interface';
 
 export class PropertyFactory {
   static create(config: INodeProperty): BaseProperty {

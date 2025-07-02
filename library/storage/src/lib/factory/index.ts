@@ -1,1 +1,1 @@
-export * from './workflow.property';
+export * from './workflow-property.factory';

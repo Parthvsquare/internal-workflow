@@ -1,7 +1,10 @@
-import { ValidationResult } from '../dto/workflow.filter';
-import { PropertyFactory } from '../factory/workflow.property';
-import { IDisplayOptions, IValidationRule } from '../interface/workflow.base';
-import { IFilterValue } from '../interface/workflow.filter';
+import { ValidationResult } from '../dto/workflow-filter.dto';
+import { PropertyFactory } from '../factory/workflow-property.factory';
+import {
+  IDisplayOptions,
+  IValidationRule,
+} from '../interface/workflow-base.interface';
+import { IFilterValue } from '../interface/workflow-filter.interface';
 import {
   IBaseProperty,
   IBooleanProperty,
@@ -22,7 +25,7 @@ import {
   IStringProperty,
   ITypeOptions,
   PropertyType,
-} from '../interface/workflow.property-schema';
+} from '../interface/workflow-property-schema.interface';
 
 export abstract class BaseProperty implements IBaseProperty {
   displayName!: string;

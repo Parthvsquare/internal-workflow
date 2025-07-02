@@ -1,3 +1,3 @@
-export * from './workflow.base';
-export * from './workflow.filter';
-export * from './workflow.property-schema';
+export * from './workflow-base.interface';
+export * from './workflow-filter.interface';
+export * from './workflow-property-schema.interface';

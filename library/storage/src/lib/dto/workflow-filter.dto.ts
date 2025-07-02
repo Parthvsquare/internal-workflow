@@ -9,8 +9,8 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import * as workflowPropertySchema from '../interface/workflow.property-schema';
-import * as workflowFilter from '../interface/workflow.filter';
+import * as workflowPropertySchema from '../interface/workflow-property-schema.interface';
+import * as workflowFilter from '../interface/workflow-filter.interface';
 
 export class ValidationResult {
   isValid!: boolean;
