@@ -1,5 +1,5 @@
 {
-  "name": "@internal-workflow/web",
+  "name": "@internal-workflow/frontend",
   "version": "0.0.1",
   "private": true,
   "dependencies": {

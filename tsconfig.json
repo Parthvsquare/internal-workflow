@@ -7,9 +7,6 @@
   },
   "references": [
     {
-      "path": "./apps/web"
-    },
-    {
       "path": "./apps/api"
     },
     {
@@ -32,6 +29,9 @@
     },
     {
       "path": "./apps/worker-services-e2e"
+    },
+    {
+      "path": "./apps/frontend"
     }
   ]
 }
