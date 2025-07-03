@@ -1,22 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────── */
 /* Schedule/Cron Trigger Management                                    */
 /* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE schedule_trigger (
-//   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   workflow_id      UUID REFERENCES workflow_definition(id) ON DELETE CASCADE,
-//   name             TEXT NOT NULL,
-//   cron_expression  TEXT NOT NULL,                   -- Standard cron expression
-//   timezone         TEXT DEFAULT 'UTC',              -- Timezone for execution
-//   is_active        BOOLEAN DEFAULT TRUE,
-//   last_execution   TIMESTAMPTZ,                     -- Last execution time
-//   next_execution   TIMESTAMPTZ,                     -- Next scheduled execution
-//   execution_count  INT DEFAULT 0,                   -- Total executions
-//   max_executions   INT,                             -- Max executions (null = unlimited)
-//   execution_data   JSONB,                           -- Data to pass to workflow
-//   created_by       UUID,
-//   created_at       TIMESTAMPTZ DEFAULT NOW(),
-//   updated_at       TIMESTAMPTZ DEFAULT NOW()
-// );
 
 import {
   Column,

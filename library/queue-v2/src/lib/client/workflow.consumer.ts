@@ -1,10 +1,16 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { Consumer, Kafka } from 'kafkajs';
 import { KAFKA } from '../interface/kafka.constant';
 import { DatabaseChangeEvent, WorkflowMessage } from '../message/message.type';
 
 @Injectable()
 export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(WorkflowConsumer.name);
   private consumer: Consumer;
   private kafka: Kafka;
   private readonly consumerGroup: string = 'workflow-engine';
@@ -19,14 +25,14 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     await this.consumer.connect();
-    console.log(
+    this.logger.log(
       `[WorkflowConsumer] Connected to Kafka with consumer group: ${this.consumerGroup}`
     );
   }
 
   async onModuleDestroy(): Promise<void> {
     await this.consumer.disconnect();
-    console.log('[WorkflowConsumer] Disconnected from Kafka');
+    this.logger.log('[WorkflowConsumer] Disconnected from Kafka');
   }
 
   async subscribeToWorkflowTriggers(
@@ -55,12 +61,12 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
 
   async startConsumer(): Promise<void> {
     if (this.isRunning) {
-      console.warn('[WorkflowConsumer] Consumer is already running');
+      this.logger.warn('[WorkflowConsumer] Consumer is already running');
       return;
     }
 
     if (this.pendingSubscriptions.size === 0) {
-      console.warn(
+      this.logger.warn(
         '[WorkflowConsumer] No subscriptions to start consumer with'
       );
       return;
@@ -68,20 +74,20 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
 
     // Subscribe to all pending topics at once
     for (const topic of this.pendingSubscriptions) {
-      console.log(`[WorkflowConsumer] Subscribing to topic: ${topic}`);
+      this.logger.log(`[WorkflowConsumer] Subscribing to topic: ${topic}`);
       await this.consumer.subscribe({ topic, fromBeginning: false });
     }
 
     this.pendingSubscriptions.clear();
     this.isRunning = true;
 
-    console.log('[WorkflowConsumer] Starting consumer...');
+    this.logger.log('[WorkflowConsumer] Starting consumer...');
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         try {
           const callback = this.callbacks.get(topic);
           if (!callback) {
-            console.warn(
+            this.logger.warn(
               `[WorkflowConsumer] No callback found for topic: ${topic}`
             );
             return;
@@ -104,11 +110,11 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
             await callback(changeEvent);
           }
 
-          console.log(
+          this.logger.log(
             `[WorkflowConsumer] Processed message from topic: ${topic}`
           );
         } catch (error) {
-          console.error(
+          this.logger.error(
             `[WorkflowConsumer] Error processing message from topic ${topic}:`,
             error
           );
@@ -132,14 +138,14 @@ export class WorkflowConsumer implements OnModuleInit, OnModuleDestroy {
 
   async commitOffsets(): Promise<void> {
     await this.consumer.commitOffsets([]);
-    console.log('[WorkflowConsumer] Committed offsets');
+    this.logger.log('[WorkflowConsumer] Committed offsets');
   }
 
   async stopConsumer(): Promise<void> {
     if (this.isRunning) {
       await this.consumer.stop();
       this.isRunning = false;
-      console.log('[WorkflowConsumer] Consumer stopped');
+      this.logger.log('[WorkflowConsumer] Consumer stopped');
     }
   }
 

@@ -1,41 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────── */
 /* 6.  Runtime: one row per trigger firing                             */
 /* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE workflow_run (
-//   id                UUID PRIMARY KEY,
-//   workflow_id       UUID REFERENCES workflow_definition(id),
-//   version_id        UUID REFERENCES workflow_version(id),
-//   trigger_event_id  TEXT,                         -- Kafka offset / UUID
-//   trigger_type      TEXT,                         -- 'webhook', 'schedule', 'manual', 'database'
-//   trigger_summary   JSONB,                        -- Summary of trigger data
-//   execution_mode    TEXT DEFAULT 'async',         -- 'sync', 'async', 'test'
-//   status            TEXT CHECK
-//                    (status IN ('PENDING','RUNNING','SUCCESS','FAILED','CANCELLED','TIMEOUT')),
-//   total_steps       INT DEFAULT 0,                -- Total steps to execute
-//   completed_steps   INT DEFAULT 0,                -- Steps completed
-//   failed_steps      INT DEFAULT 0,                -- Steps failed
-//   skipped_steps     INT DEFAULT 0,                -- Steps skipped
-//   execution_time    INT,                         -- Total execution time in ms
-//   retry_count       INT DEFAULT 0,                -- Number of workflow retries
-//   max_retries       INT DEFAULT 3,                -- Max allowed retries
-//   -- Enhanced metrics (from ExecutionMetricsEntity)
-//   queue_time        INT,                          -- Time spent in queue before execution
-//   memory_usage      INT,                          -- Peak memory usage in MB
-//   cpu_time          INT,                          -- CPU time in ms
-//   network_calls     INT DEFAULT 0,                -- Number of external API calls
-//   network_time      INT DEFAULT 0,                -- Time spent on network calls
-//   cache_hits        INT DEFAULT 0,                -- Number of cache hits
-//   cache_misses      INT DEFAULT 0,                -- Number of cache misses
-//   error_count       INT DEFAULT 0,                -- Number of errors encountered
-//   warning_count     INT DEFAULT 0,                -- Number of warnings
-//   started_at        TIMESTAMPTZ,
-//   ended_at          TIMESTAMPTZ,
-//   fail_reason       TEXT,
-//   context_data      JSONB,                        -- Additional execution context
-//   created_by        UUID,                         -- User who triggered (if manual)
-//   created_at        TIMESTAMPTZ DEFAULT NOW(),
-//   updated_at        TIMESTAMPTZ DEFAULT NOW()
-// );
 
 import {
   Column,
@@ -45,11 +10,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-// CREATE INDEX idx_run_status      ON workflow_run (status);
-// CREATE INDEX idx_run_started_at  ON workflow_run (started_at);
-// CREATE INDEX idx_run_trigger_type ON workflow_run (trigger_type);
-// CREATE INDEX idx_run_execution_time ON workflow_run (execution_time);
 
 @Entity('workflow_execution')
 @Index('idx_execution_status', ['status'])

@@ -1,16 +1,3 @@
-// Table "workflow_step" {
-//   "id" UUID [pk]
-//   "version_id" UUID
-//   "kind" TEXT
-//   "action_key" TEXT
-//   "cfg" JSONB
-//   "name" TEXT
-// }
-// ALTER TABLE "workflow_step" ADD COLUMN "credential_id" UUID REFERENCES "user_credentials"("id");
-// ALTER TABLE "workflow_step" ADD COLUMN "resource" TEXT; -- For resource/operation pattern
-// ALTER TABLE "workflow_step" ADD COLUMN "operation" TEXT;
-// ALTER TABLE "workflow_step" ADD COLUMN "display_options" JSONB; -- Show/hide conditions
-
 import {
   Column,
   Entity,

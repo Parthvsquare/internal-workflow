@@ -1,21 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────── */
 /* Workflow Variables Storage                                          */
 /* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE workflow_variable (
-//   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   workflow_id      UUID REFERENCES workflow_definition(id) ON DELETE CASCADE,
-//   key              TEXT NOT NULL,
-//   value            JSONB,                           -- Variable value (any type)
-//   data_type        TEXT DEFAULT 'string',           -- 'string', 'number', 'boolean', 'object', 'array'
-//   is_encrypted     BOOLEAN DEFAULT FALSE,           -- Whether value is encrypted
-//   is_secret        BOOLEAN DEFAULT FALSE,           -- Mark as secret (hidden in UI)
-//   description      TEXT,                            -- Variable description
-//   default_value    JSONB,                           -- Default value if not set
-//   created_by       UUID,
-//   created_at       TIMESTAMPTZ DEFAULT NOW(),
-//   updated_at       TIMESTAMPTZ DEFAULT NOW(),
-//   UNIQUE (workflow_id, key)
-// );
 
 import {
   Column,

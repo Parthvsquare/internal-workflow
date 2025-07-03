@@ -1,23 +1,3 @@
-/* ──────────────────────────────────────────────────────────────────── */
-/* 1.  Mutable "container" that appears in the UI                      */
-/* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE workflow_definition (
-//   id            UUID PRIMARY KEY,
-//   name          TEXT NOT NULL,
-//   description   TEXT,
-//   segment       TEXT CHECK (segment IN ('CRM','SALES','MARKETING')),
-//   category      TEXT,                             -- 'automation', 'integration', 'notification'
-//   tags          TEXT[],                           -- User-defined tags for organization
-//   latest_ver_id UUID,                           -- FK added after version table
-//   is_active     BOOLEAN DEFAULT TRUE,
-//   is_template   BOOLEAN DEFAULT FALSE,           -- Template workflows
-//   pinned        BOOLEAN DEFAULT FALSE,           -- User can pin favorite workflows
-//   created_by    UUID,
-//   updated_by    UUID,
-//   created_at    TIMESTAMPTZ DEFAULT NOW(),
-//   updated_at    TIMESTAMPTZ DEFAULT NOW()
-// );
-
 import {
   Entity,
   PrimaryGeneratedColumn,

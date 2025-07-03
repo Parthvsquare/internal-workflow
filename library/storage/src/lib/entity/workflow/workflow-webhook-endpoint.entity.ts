@@ -1,23 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────── */
 /* Webhook Endpoint Management                                         */
 /* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE webhook_endpoint (
-//   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   workflow_id      UUID REFERENCES workflow_definition(id) ON DELETE CASCADE,
-//   trigger_key      TEXT NOT NULL,
-//   endpoint_path    TEXT UNIQUE NOT NULL,           -- e.g., '/webhook/abc123def'
-//   method           TEXT DEFAULT 'POST',             -- HTTP method
-//   auth_required    BOOLEAN DEFAULT FALSE,
-//   auth_header      TEXT,                           -- Expected auth header
-//   auth_token       TEXT,                           -- Expected token value (encrypted)
-//   response_mode    TEXT DEFAULT 'async',           -- 'sync', 'async', 'webhook'
-//   response_data    JSONB,                          -- Custom response data
-//   is_active        BOOLEAN DEFAULT TRUE,
-//   last_triggered   TIMESTAMPTZ,
-//   total_calls      INT DEFAULT 0,
-//   created_at       TIMESTAMPTZ DEFAULT NOW(),
-//   updated_at       TIMESTAMPTZ DEFAULT NOW()
-// );
 
 import {
   Column,

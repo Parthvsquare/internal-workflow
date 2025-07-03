@@ -1,18 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────── */
 /* 2.  Immutable versions (JSON copy stored inline + S3 pointer)       */
 /* ──────────────────────────────────────────────────────────────────── */
-// CREATE TABLE workflow_version (
-//   id             UUID PRIMARY KEY,
-//   workflow_id    UUID REFERENCES workflow_definition(id) ON DELETE CASCADE,
-//   version_num    INT  NOT NULL,
-//   s3_key         TEXT NOT NULL,        -- e.g. s3://wf/<id>/v2.json
-//   s3_etag        TEXT,
-//   inline_json    JSONB,                -- NULL ⇒ fetch from S3
-//   root_step_id   UUID,                 -- filled after first step insert
-//   editor_id      UUID,
-//   created_at     TIMESTAMPTZ DEFAULT NOW(),
-//   UNIQUE (workflow_id, version_num)
-// );
 
 import {
   Entity,

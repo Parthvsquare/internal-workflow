@@ -7,19 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-// CREATE TABLE "credential_type" (
-//   "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   "name" TEXT UNIQUE NOT NULL,
-//   "display_name" TEXT NOT NULL,
-//   "description" TEXT,
-//   "icon" TEXT,
-//   "properties_schema" JSONB NOT NULL, -- Field definitions
-//   "test_endpoint" JSONB, -- How to test the credential
-//   "auth_type" TEXT, -- 'oauth2', 'api_key', 'basic', 'custom'
-//   "supported_actions" TEXT[], -- Which actions support this credential
-//   "created_at" TIMESTAMPTZ DEFAULT NOW()
-// );
-
 @Entity('credential_type')
 @Index('idx_credential_type_key', ['id'])
 export class WorkflowCredentialTypeEntity {

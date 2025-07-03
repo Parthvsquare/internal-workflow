@@ -27,11 +27,6 @@ export class WorkflowProcessorService implements OnModuleInit {
     const triggerRegistries =
       await this.workflowEngine.getActiveTriggerRegistries();
 
-    console.log(
-      '===> ~ WorkflowProcessorService ~ startListening ~ triggerRegistries:',
-      triggerRegistries
-    );
-
     // Collect all topics to subscribe to
     const topicsToSubscribe: string[] = [];
 
@@ -39,11 +34,6 @@ export class WorkflowProcessorService implements OnModuleInit {
     for (const trigger of triggerRegistries) {
       if (trigger.event_source === 'debezium') {
         const topicName = this.getDebeziumTopicName(trigger);
-
-        console.log(
-          '===> ~ WorkflowProcessorService ~ startListening ~ topicName:',
-          topicName
-        );
 
         if (topicName) {
           this.logger.log(
@@ -82,25 +72,10 @@ export class WorkflowProcessorService implements OnModuleInit {
     // Extract table name from trigger properties or key
     // Assuming trigger key format: "table_name_table_change"
 
-    console.log(
-      '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ trigger:',
-      trigger
-    );
-
     if (trigger.key?.endsWith('_db_change')) {
       const tableName = trigger.key.replace('_db_change', '');
 
-      console.log(
-        '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ tableName:',
-        tableName
-      );
-
       const dbTableName = `${this.debeziumTopicPrefix}.public.${tableName}`;
-
-      console.log(
-        '===> ~ WorkflowProcessorService ~ getDebeziumTopicName ~ dbTableName:',
-        dbTableName
-      );
 
       return dbTableName;
     }

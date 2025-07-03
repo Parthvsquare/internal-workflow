@@ -28,13 +28,6 @@ export class WorkflowActionExecutor {
     config: any,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
-    console.log('\n');
-    console.log(
-      '===> ~ WorkflowActionExecutor ~ executeAction ~ actionKey:',
-      actionKey
-    );
-    console.log('\n');
-
     this.logger.log(`Executing action: ${actionKey}`);
 
     try {
@@ -71,15 +64,6 @@ export class WorkflowActionExecutor {
     context: WorkflowContext
   ): Promise<ExecutionResult> {
     const { execution_type, key } = actionRegistry;
-
-    console.log('\n');
-    console.log(
-      '===> ~ WorkflowActionExecutor ~ executeRegistryAction ~ execution_type:',
-      execution_type,
-      'key:',
-      key
-    );
-    console.log('\n');
 
     // Replace template variables in config
     const processedConfig = this.processConfigVariables(config, context);
@@ -193,15 +177,6 @@ export class WorkflowActionExecutor {
     config: any,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
-    console.log('\n');
-    console.log(
-      '===> ~ WorkflowActionExecutor ~ executeTaskManagement ~ config:',
-      {
-        config,
-        context,
-      }
-    );
-    console.log('\n');
     const uuid = crypto.randomUUID();
 
     try {

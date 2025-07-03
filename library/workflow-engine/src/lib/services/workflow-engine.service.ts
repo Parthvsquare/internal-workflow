@@ -62,14 +62,6 @@ export class WorkflowEngineService {
     message: string;
     workflowsTriggered: number;
   }> {
-    console.log('\n');
-    console.log(
-      '===> ~ WorkflowEngineService ~ processTriggerEvent ~ triggerKey:',
-      triggerKey
-    );
-    this.logger.log(`Processing trigger event: ${triggerKey}`);
-    console.log('\n');
-
     try {
       // Get trigger registry
       const trigger = await this.triggerRegistry.findOne({
@@ -107,13 +99,6 @@ export class WorkflowEngineService {
           subscription,
           eventData
         );
-
-        console.log('\n');
-        console.log(
-          '===> ~ WorkflowEngineService ~ shouldExecute:',
-          shouldExecute
-        );
-        console.log('\n');
 
         if (shouldExecute) {
           const workflowContext: WorkflowContext = {
@@ -174,20 +159,7 @@ export class WorkflowEngineService {
         relations: ['latestVersion'],
       });
 
-      console.log('\n');
-      console.log(
-        '===> ~ WorkflowEngineService ~ executeWorkflow ~ workflow:',
-        workflow
-      );
-      console.log('\n');
-
       if (!workflow || !workflow.latestVersion) {
-        console.log('\n');
-        console.log(
-          '===> ~ WorkflowEngineService ~ executeWorkflow ~ workflow:',
-          workflow
-        );
-        console.log('\n');
         return {
           success: false,
           error: `Workflow ${workflowId} not found or inactive`,
@@ -211,13 +183,6 @@ export class WorkflowEngineService {
         where: { version_id: workflow.latestVersion.id },
         order: { name: 'ASC' },
       });
-
-      console.log('\n');
-      console.log(
-        '===> ~ WorkflowEngineService ~ executeWorkflow ~ steps:',
-        steps
-      );
-      console.log('\n');
 
       // Execute steps
       const stepResults = await this.executeSteps(steps, context);
@@ -407,13 +372,6 @@ export class WorkflowEngineService {
     step: WorkflowStepEntity,
     context: WorkflowContext
   ): Promise<ExecutionResult> {
-    console.log('\n');
-    console.log(
-      '===> ~ WorkflowEngineService ~ executeActionStep ~ step:',
-      step
-    );
-    console.log('\n');
-
     if (!step.action_key) {
       return {
         success: false,
