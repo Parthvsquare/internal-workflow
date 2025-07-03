@@ -2,15 +2,36 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
+  "compilerOptions": {
+    "baseUrl": "."
+  },
   "references": [
     {
-      "path": "./apps/web"
-    },
-    {
-      "path": "./apps/api-e2e"
-    },
-    {
       "path": "./apps/api"
+    },
+    {
+      "path": "./library/storage"
+    },
+    {
+      "path": "./apps/scheduler-service"
+    },
+    {
+      "path": "./apps/worker-service"
+    },
+    {
+      "path": "./library/queue-v2"
+    },
+    {
+      "path": "./library/workflow-engine"
+    },
+    {
+      "path": "./library/frontend-shared"
+    },
+    {
+      "path": "./apps/worker-services-e2e"
+    },
+    {
+      "path": "./apps/web"
     }
   ]
 }

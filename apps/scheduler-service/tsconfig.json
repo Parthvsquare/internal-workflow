@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "references": [
+    {
+      "path": "../../library/workflow-engine"
+    },
+    {
+      "path": "../../library/queue-v2"
+    },
+    {
+      "path": "../../library/storage"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

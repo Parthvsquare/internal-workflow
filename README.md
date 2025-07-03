@@ -1,82 +1,270 @@
-# InternalWorkflow
+# LeadSend Internal Workflow System
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+## 📋 **Project Overview**
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+LeadSend Internal Workflow System is a comprehensive workflow automation platform built with a modern microservices architecture. The system enables both **developers** and **end-users** to create, manage, and execute complex workflows for business process automation.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+### 🎯 **What This System Does**
 
-## Finish your CI setup
+This platform provides a complete workflow automation solution that allows:
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/x9ZuTtzL1b)
+- **Automated Business Processes**: Create workflows that respond to triggers (database changes, webhooks, schedules)
+- **Multi-Step Orchestration**: Chain together multiple actions like sending emails, creating tasks, data processing
+- **Real-time Execution**: Process workflows in real-time with comprehensive tracking and monitoring
+- **Flexible Integration**: Connect with external services through configurable actions and credentials
 
+### 👥 **Dual Perspective Approach**
 
-## Run tasks
+#### **🧑‍💻 Developer Perspective**
 
-To run the dev server for your app, use:
+- **Code-First Workflow Creation**: Developers can define workflows using TypeScript/JavaScript with full programmatic control
+- **Custom Action Development**: Build reusable workflow actions and register them in the system
+- **API Integration**: Create workflows via REST APIs with complete programmatic control
+- **Advanced Configuration**: Access to raw configuration objects, custom filters, and complex business logic
 
-```sh
-npx nx serve internal-workflow
+```typescript
+// Developer creating workflow via API
+const workflow = await workflowService.create({
+  name: 'Lead Processing Pipeline',
+  steps: [
+    { kind: 'action', action_key: 'email_send', cfg: { template: 'welcome' } },
+    { kind: 'action', action_key: 'task_create', cfg: { assignee: 'sales_team' } },
+  ],
+  triggers: ['lead_sources_db_change'],
+});
 ```
 
-To create a production bundle:
+#### **👤 User Perspective**
 
-```sh
-npx nx build internal-workflow
+- **Visual Workflow Builder**: Drag-and-drop interface for creating workflows without coding
+- **Pre-built Action Library**: Access to ready-made actions (send email, create task, etc.)
+- **Template-Based Creation**: Start from workflow templates for common business processes
+- **Simple Configuration**: User-friendly forms for configuring actions and triggers
+
+### 🏗️ **System Architecture**
+
+The system is built as an **Nx monorepo** with the following core services:
+
+| **Service**              | **Purpose**                                           | **User Interaction**                                       |
+| ------------------------ | ----------------------------------------------------- | ---------------------------------------------------------- |
+| **🌐 API Service**       | Workflow management, user interface, configuration    | Primary user interface for creating and managing workflows |
+| **⚙️ Worker Service**    | Workflow execution engine, step processing            | Background execution of user-created workflows             |
+| **📅 Scheduler Service** | Webhook handling, cron scheduling, trigger management | Handles time-based and external triggers                   |
+| **🎨 Web App**           | Frontend interface for visual workflow creation       | User-friendly workflow builder interface                   |
+
+### 🔄 **Workflow Lifecycle**
+
+1. **Design Time**: Users/developers create workflows with steps, connections, and configurations
+2. **Subscription**: Workflows are linked to triggers (database events, webhooks, schedules)
+3. **Runtime**: Events trigger workflow execution, steps are processed sequentially
+4. **Monitoring**: Real-time tracking of execution status, results, and performance metrics
+
+### 📦 **Shared Libraries**
+
+- **`@leadsend/storage`**: Database entities and data access layer
+- **`@leadsend/queue-v2`**: Message queuing and workflow orchestration
+- **`@leadsend/workflow-engine`**: Core workflow execution logic
+- **`@leadsend/frontend-shared`**: Reusable UI components
+
+### 🚀 **Key Features**
+
+- ✅ **Multi-Trigger Support**: Database changes, webhooks, scheduled events
+- ✅ **Action Registry**: Extensible library of workflow actions
+- ✅ **Credential Management**: Secure storage of API keys and authentication
+- ✅ **Real-time Execution**: Immediate workflow processing with status tracking
+- ✅ **Version Control**: Immutable workflow versions with rollback capability
+- ✅ **Visual Builder**: User-friendly interface for non-technical users
+- ✅ **Developer APIs**: Full programmatic control for technical teams
+
+---
+
+## 🗄️ **Database Configuration**
+
+**Single PostgreSQL Database** shared across all services:
+
+- **API Service** (main application)
+- **Worker Service** (processes workflows)
+- **Scheduler Service** (handles webhooks/scheduling)
+
+```typescript
+// Database config (same across all services)
+{
+  type: 'postgres',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+  username: process.env.POSTGRES_USER || 'postgres',
+  password: process.env.POSTGRES_PASSWORD || 'postgres',
+  database: process.env.POSTGRES_DB || 'mydb',
+  synchronize: true,
+  entities: [...ENTITY] // 17 total entities
+}
 ```
 
-To see all available targets to run for a project, run:
+## 📊 **Data Categories & Storage Mapping**
 
-```sh
-npx nx show project internal-workflow
+Ran tool
+
+## 📝 **Detailed Storage Breakdown**
+
+### **1. DESIGN TIME DATA** (User Configuration)
+
+| **Table**               | **What It Stores**                                      | **When Saved**                      | **Saved By**          |
+| ----------------------- | ------------------------------------------------------- | ----------------------------------- | --------------------- |
+| `workflow_definition`   | Workflow metadata (name, description, category, tags)   | User creates workflow               | **API Service**       |
+| `workflow_version`      | Immutable workflow versions + S3 storage keys           | User saves/publishes workflow       | **API Service**       |
+| `workflow_step`         | Individual workflow steps (actions, conditions, delays) | User adds steps to workflow         | **API Service**       |
+| `workflow_edge`         | Connections between steps (graph structure)             | User connects steps                 | **API Service**       |
+| `workflow_variable`     | User-defined variables (encrypted if needed)            | User configures variables           | **API Service**       |
+| `workflow_subscription` | Links workflows to triggers + filter conditions         | User subscribes workflow to trigger | **API Service**       |
+| `webhook_endpoint`      | Webhook URL configurations                              | User enables webhook triggers       | **Scheduler Service** |
+| `schedule_trigger`      | Cron job configurations                                 | User sets up scheduled triggers     | **Scheduler Service** |
+
+### **2. REGISTRY DATA** (Available Components)
+
+| **Table**                   | **What It Stores**                                      | **When Saved**                     | **Saved By**                       |
+| --------------------------- | ------------------------------------------------------- | ---------------------------------- | ---------------------------------- |
+| `workflow_action_registry`  | Available actions (SMS, email, task creation, etc.)     | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `workflow_trigger_registry` | Available triggers (database, webhook, schedule)        | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `credential_type`           | Authentication type definitions (OAuth2, API key, etc.) | System startup/admin configuration | **API Service** (migrations/seeds) |
+| `user_credentials`          | User's encrypted authentication data                    | User adds credentials              | **API Service**                    |
+
+### **3. RUNTIME DATA** (Execution Tracking)
+
+| **Table**            | **What It Stores**                                   | **When Saved**                | **Saved By**       |
+| -------------------- | ---------------------------------------------------- | ----------------------------- | ------------------ |
+| `workflow_execution` | Overall execution tracking (status, metrics, timing) | Workflow execution starts     | **Worker Service** |
+| `step_execution`     | Individual step execution details (results, errors)  | Each step executes            | **Worker Service** |
+| `tasks`              | Generated tasks from workflow actions                | Task creation action executes | **Worker Service** |
+
+### **4. CONVENIENCE VIEW**
+
+| **View**               | **What It Provides**               | **Purpose**                                |
+| ---------------------- | ---------------------------------- | ------------------------------------------ |
+| `workflow_latest_json` | Latest workflow definition as JSON | Quick access to current workflow structure |
+
+## 🔄 **Data Flow During Workflow Execution**
+
+Read file: library/workflow-engine/src/lib/services/workflow-engine.service.ts
+
+## 💾 **Specific Data Storage Flows**
+
+### **A) Workflow Creation Flow (API Service)**
+
+```typescript
+// 1. User creates workflow → workflow_definition
+const workflow = await workflowRepository.save({
+  name: 'Lead Processing',
+  description: 'Process new leads',
+  category: 'automation',
+  is_active: true,
+});
+
+// 2. User saves version → workflow_version
+const version = await versionRepository.save({
+  workflow_id: workflow.id,
+  version_num: 1,
+  s3_key: `s3://workflows/${workflow.id}/v1.json`,
+});
+
+// 3. User adds steps → workflow_step
+const step = await stepRepository.save({
+  version_id: version.id,
+  kind: 'action',
+  action_key: 'task_management',
+  cfg: { operation: 'create', title: 'Follow up lead' },
+});
+
+// 4. User connects steps → workflow_edge
+await edgeRepository.save({
+  from_step_id: step1.id,
+  to_step_id: step2.id,
+  branch_key: 'default',
+});
+
+// 5. User subscribes to trigger → workflow_subscription
+await subscriptionRepository.save({
+  workflow_id: workflow.id,
+  trigger_key: 'lead_sources_db_change',
+  filter_conditions: {
+    /* filter logic */
+  },
+});
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### **B) Workflow Execution Flow (Worker Service)**
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```typescript
+// 1. Event arrives → Find subscriptions
+const subscriptions = await subscriptionRepository.find({
+  where: { trigger_key: 'lead_sources_db_change' },
+});
 
-## Add new projects
+// 2. Create workflow run → workflow_run
+const workflowRun = await runRepository.save({
+  workflow_id: workflow.id,
+  version_id: version.id,
+  trigger_event_id: 'event-123',
+  trigger_type: 'database',
+  status: 'PENDING',
+  context_data: eventData,
+});
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+// 3. Execute each step → step_run (not shown in the code above, but this is where it would happen)
+for (const step of steps) {
+  const stepRun = await stepRunRepository.save({
+    run_id: workflowRun.id,
+    step_id: step.id,
+    status: 'PENDING',
+    started_at: new Date(),
+  });
 
-Use the plugin's generator to create new projects.
+  // Execute step logic...
 
-To generate a new application, use:
+  // Update step_run with results
+  await stepRunRepository.update(
+    { run_id: workflowRun.id, step_id: step.id },
+    {
+      status: 'SUCCESS',
+      ended_at: new Date(),
+      result_data: stepResult,
+      execution_time: duration,
+    }
+  );
+}
 
-```sh
-npx nx g @nx/react:app demo
+// 4. If task creation action → tasks
+if (action_key === 'task_management') {
+  await taskRepository.save({
+    title: 'Follow up with lead',
+    description: 'Generated from workflow',
+    status: TaskStatus.PENDING,
+  });
+}
 ```
 
-To generate a new library, use:
+## 🔍 **Data Access Patterns**
 
-```sh
-npx nx g @nx/react:lib mylib
-```
+### **Read-Heavy Operations**
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+- **Trigger Processing**: Read from `workflow_trigger_registry` → `workflow_subscription` → `workflow_definition`
+- **Workflow Execution**: Read from `workflow_definition` → `workflow_version` → `workflow_step` → `workflow_variable`
+- **Action Execution**: Read from `workflow_action_registry`
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### **Write-Heavy Operations**
 
+- **Runtime Tracking**: Write to `workflow_run` → `step_run`
+- **Task Generation**: Write to `tasks`
+- **Metrics**: Update `workflow_run` with execution metrics
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### **Mixed Read/Write**
 
-## Install Nx Console
+- **User Configuration**: Read/Write `workflow_definition`, `workflow_step`, `workflow_variable`
+- **Credential Management**: Read/Write `user_credentials`
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## 🏗️ **Service Responsibilities**
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| **Service**           | **Primary Role**                    | **Database Operations**          |
+| --------------------- | ----------------------------------- | -------------------------------- |
+| **API Service**       | User interface, workflow management | CREATE/UPDATE design-time data   |
+| **Worker Service**    | Workflow execution                  | CREATE/UPDATE runtime data       |
+| **Scheduler Service** | Webhooks, scheduling                | CREATE/UPDATE trigger management |

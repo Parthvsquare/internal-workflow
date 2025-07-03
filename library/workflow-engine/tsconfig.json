@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "references": [
+    {
+      "path": "../queue-v2"
+    },
+    {
+      "path": "../storage"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

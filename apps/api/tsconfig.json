@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
+  "compilerOptions": {
+    "baseUrl": "."
+  },
   "references": [
+    {
+      "path": "../../library/storage"
+    },
     {
       "path": "./tsconfig.app.json"
     }
